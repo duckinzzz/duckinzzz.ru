@@ -140,3 +140,144 @@ body {
         padding: 15px;
     }
 }
+
+.last-battles {
+    margin-top: 30px;
+    padding: 20px;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.last-battles h3 {
+    margin-bottom: 12px;
+}
+
+.last-battles ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.last-battles li {
+    display: flex;
+    gap: 6px;
+    padding: 6px 0;
+    font-size: 15px;
+}
+
+.last-battles .player {
+    font-weight: 600;
+}
+
+.last-battles .change.win {
+    color: #28a745;
+    font-weight: 600;
+}
+
+.last-battles .change.loss {
+    color: #dc3545;
+    font-weight: 600;
+}
+
+.main-content {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 24px;
+    align-items: start;
+}
+
+/* ---------- Последние бои ---------- */
+
+.last-battles {
+    background: #ffffff;
+    border-radius: 14px;
+    padding: 18px 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    position: sticky;
+    top: 20px;
+}
+
+.last-battles h3 {
+    margin-bottom: 14px;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.last-battles ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.battle-row {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 14px;
+}
+
+.battle-row:last-child {
+    border-bottom: none;
+}
+
+.player {
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.trophies {
+    color: #6c757d;
+    margin-right: 6px;
+    font-variant-numeric: tabular-nums;
+}
+
+.change {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.change.win {
+    color: #28a745;
+}
+
+.change.loss {
+    color: #dc3545;
+}
+
+@media (max-width: 900px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+
+    .last-battles {
+        position: static;
+    }
+}
+
+.battle-row {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.battle-row:last-child {
+    border-bottom: none;
+}
+
+.battle-main {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+}
+
+.battle-time {
+    margin-top: 2px;
+    font-size: 12px;
+    color: #9aa0a6;
+}

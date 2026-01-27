@@ -11,87 +11,113 @@
     <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
 </head>
 <body>
-    <div class="container">
-        <div class="header">
-            <h1>🏆 Clech Royale Stats</h1>
-            <p>Отслеживание трофеев по боям</p>
+<div class="container">
+    <div class="header">
+        <h1>🏆 Clech Royale Stats</h1>
+        <p>Отслеживание трофеев по боям</p>
+    </div>
+    <div class="controls">
+        <div class="control-group">
+            <label for="playerSelect">Выберите игрока:</label>
+            <select id="playerSelect"></select>
         </div>
+    </div>
 
-        <div class="controls">
-            <div class="control-group">
-                <label for="playerSelect">Выберите игрока:</label>
-                <select id="playerSelect"></select>
-            </div>
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-dot win"></div>
+            <span>Победа (+трофеи)</span>
         </div>
-
-        <div class="legend">
-            <div class="legend-item">
-                <div class="legend-dot win"></div>
-                <span>Победа (+трофеи)</span>
-            </div>
-            <div class="legend-item">
-                <div class="legend-dot loss"></div>
-                <span>Поражение (-трофеи)</span>
-            </div>
+        <div class="legend-item">
+            <div class="legend-dot loss"></div>
+            <span>Поражение (-трофеи)</span>
         </div>
+    </div>
 
+    <div class="main-content">
         <div class="chart-container">
             <div id="chart"></div>
         </div>
 
-        <div class="stats-info">
-            Данные обновляются автоматически каждые 90 секунд
+        <div class="last-battles">
+            <h3>🕒 Последние бои</h3>
+            <ul>
+                {% for battle in last_battles %}
+                    <li class="battle-row">
+                        <div class="battle-main">
+                            <span class="player">{{ battle.player }}</span>
+                            <span class="trophies">{{ battle.before }}</span>
+                            <span class="change {% if battle.change > 0 %}win{% else %}loss{% endif %}">
+                            {% if battle.change > 0 %}+{% endif %}{{ battle.change }}</span>
+                        </div>
+                        <div class="battle-time">
+                            {{ battle.ago }}
+                        </div>
+                    </li>
+
+                {% endfor %}
+            </ul>
         </div>
     </div>
 
-    <script>
-        const allData = {{ data|safe }};
-        const defaultPlayer = "{{ default_player }}";
-        const select = document.getElementById("playerSelect");
 
-        Object.keys(allData).forEach(player => {
-            const option = document.createElement("option");
-            option.value = player;
-            option.textContent = player;
-            if (player === defaultPlayer) option.selected = true;
-            select.appendChild(option);
-        });
+    <div class="stats-info">
+        Данные обновляются автоматически каждые 90 секунд
+    </div>
+</div>
 
-        function renderChart(player) {
-            const data = allData[player];
-            if (!data || !data.x || data.x.length === 0) {
-                Plotly.react('chart', [], {
-                    title: 'Нет данных для выбранного игрока',
-                    plot_bgcolor: '#f8f9fa',
-                    paper_bgcolor: 'white'
-                });
-                return;
-            }
-            const colors = data.custom.map(c => c.change > 0 ? '#28a745' : '#dc3545');
-            Plotly.newPlot('chart', [{
-                x: data.x,
-                y: data.y,
-                mode: 'lines+markers',
-                customdata: data.custom,
-                line: { color: '#667eea', width: 3 },
-                marker: { color: colors, size: 10, line: { color: 'white', width: 2 } },
-                hovertemplate:
-                    'Дата %{customdata.battle_time}<br>' +
-                    'Трофеи: %{y}<br>' +
-                    'Изменение: %{customdata.change}<br>' +
-                    'Противник: %{customdata.enemy}<extra></extra>'
-            }], {
-                xaxis: { title: { text: 'Номер боя', font: { size: 14, weight: 600 } }, range: [Math.max(0, data.x.length - 10), data.x.length], rangeslider: { visible: true } },
-                yaxis: { title: { text: 'Количество трофеев', font: { size: 14, weight: 600 } } },
-                margin: { t: 40, b: 60, l: 60, r: 40 },
+<script>
+    const allData = {{ data|safe }};
+    const defaultPlayer = "{{ default_player }}";
+    const select = document.getElementById("playerSelect");
+
+    Object.keys(allData).forEach(player => {
+        const option = document.createElement("option");
+        option.value = player;
+        option.textContent = player;
+        if (player === defaultPlayer) option.selected = true;
+        select.appendChild(option);
+    });
+
+    function renderChart(player) {
+        const data = allData[player];
+        if (!data || !data.x || data.x.length === 0) {
+            Plotly.react('chart', [], {
+                title: 'Нет данных для выбранного игрока',
                 plot_bgcolor: '#f8f9fa',
-                paper_bgcolor: 'white',
-                font: { family: 'Segoe UI, sans-serif' }
-            }, { responsive: true });
+                paper_bgcolor: 'white'
+            });
+            return;
         }
+        const colors = data.custom.map(c => c.change > 0 ? '#28a745' : '#dc3545');
+        Plotly.newPlot('chart', [{
+            x: data.x,
+            y: data.y,
+            mode: 'lines+markers',
+            customdata: data.custom,
+            line: {color: '#667eea', width: 3},
+            marker: {color: colors, size: 10, line: {color: 'white', width: 2}},
+            hovertemplate:
+                'Дата %{customdata.battle_time}<br>' +
+                'Трофеи: %{y}<br>' +
+                'Изменение: %{customdata.change}<br>' +
+                'Противник: %{customdata.enemy}<extra></extra>'
+        }], {
+            xaxis: {
+                title: {text: 'Номер боя', font: {size: 14, weight: 600}},
+                range: [Math.max(0, data.x.length - 10), data.x.length],
+                rangeslider: {visible: true}
+            },
+            yaxis: {title: {text: 'Количество трофеев', font: {size: 14, weight: 600}}},
+            margin: {t: 40, b: 60, l: 60, r: 40},
+            plot_bgcolor: '#f8f9fa',
+            paper_bgcolor: 'white',
+            font: {family: 'Segoe UI, sans-serif'}
+        }, {responsive: true});
+    }
 
-        select.addEventListener("change", e => renderChart(e.target.value));
-        renderChart(defaultPlayer);
-    </script>
+    select.addEventListener("change", e => renderChart(e.target.value));
+    renderChart(defaultPlayer);
+</script>
 </body>
 </html>
