@@ -1,0 +1,47 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pavel Yurchenko</title>
+    <link rel="icon" type="image/png" href="{% static 'frontend/images/favicon.png' %}"/>
+    <link rel="stylesheet" href="{% static 'frontend/css/styles.css' %}" type="text/css">
+    <base target="_blank">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@200&display=swap');
+    </style>
+    <script src="{% static 'frontend/scripts/keyPressHandler.js' %}"></script>
+    <script src="{% static 'frontend/scripts/buttonAdder.js' %}"></script>
+    <script src="{% static 'frontend/scripts/toQuack.js' %}"></script>
+    <script src="{% static 'frontend/scripts/autoDarkTheme.js' %}"></script>
+    <audio id="quackAudio" src="{% static 'frontend/sounds/quack.mp3' %}"></audio>
+
+</head>
+
+<body>
+<div class="main">
+    <div class="name">Yurchenko Pavel</div>
+    <div class="place">FEFU IMCS Student</div>
+    <div class="quote">@duckinzzz on everything</div>
+
+    <div class="links">
+        <ul>
+            <li><a href="https://t.me/duckinzzz">tg</a></li>
+            <li><a href="https://www.instagram.com/duckinzzz">inst</a></li>
+            <li><a href="https://www.github.com/duckinzzz/">github</a></li>
+            <li><a href="https://www.vk.com/duckinzzz/">vk</a></li>
+        </ul>
+    </div>
+
+    <div id="duckContainer" class="center-container">
+        <button id="duckButton" class="duckButton" onclick="toQuack()">
+            <img class="duckimg" src="{% static 'frontend/images/duck.png' %}" alt="duck">
+        </button>
+    </div>
+</div>
+</body>
+
+</html>

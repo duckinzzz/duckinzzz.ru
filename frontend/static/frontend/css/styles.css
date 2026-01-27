@@ -1,0 +1,77 @@
+:root {
+    --text-color: #000000FF;
+    --bg-color: #EFEFEFFF;
+}
+
+body {
+    background-color: var(--bg-color);
+}
+
+.main {
+    margin-top: 10%;
+    width: 90%;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+* {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-color);
+}
+
+.quote {
+    margin-top: 20px;
+    font-size: 20px;
+    text-align: center;
+}
+
+.name {
+    font-size: 39px;
+    font-family: 'JetBrains Mono Bold', monospace;
+    text-align: center;
+}
+
+.place {
+    font-size: 22px;
+    text-align: center;
+}
+
+.links {
+    width: 80%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+li {
+    list-style-type: none;
+    margin: auto;
+    font-size: 20px;
+}
+
+ul {
+    padding-left: 0;
+    display: flex;
+    margin-top: 2px;
+}
+
+.center-container {
+    display: flex;
+    margin-top: 50px;
+    justify-content: center;
+    align-items: center;
+}
+
+.duckButton {
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: none;
+    padding: 0;
+    opacity: 0;
+    transition: opacity 1s;
+}
+
+.duckButton img {
+    width: 44px;
+}

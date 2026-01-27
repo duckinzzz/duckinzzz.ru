@@ -1,0 +1,8 @@
+services:
+  web:
+    build: .
+    container_name: duckinzzz_web
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"

@@ -1,0 +1,40 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy
+        uses: appleboy/ssh-action@v1.2.4
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          port: ${{ secrets.SERVER_SSH_PORT }}
+          script: |
+            cd /srv/duckinzzz.ru
+
+            cat > .env <<EOF
+            SECRET_KEY=${{ secrets.SECRET_KEY }}
+            CR_API_TOKEN=${{ secrets.CR_API_TOKEN }}
+
+            DB_NAME=${{ secrets.DB_NAME }}
+            DB_USER=${{ secrets.DB_USER }}
+            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            DB_HOST=${{ secrets.DB_HOST }}
+            DB_PORT=${{ secrets.DB_PORT }}
+            EOF
+
+            git fetch origin
+            git reset --hard origin/main
+            docker compose build
+            docker compose up -d --remove-orphans

@@ -1,0 +1,42 @@
+:root {
+    --text-color: #000000FF;
+    --bg-color: #EFEFEFFF;
+}
+
+body {
+    background-color: var(--bg-color);
+}
+
+.main {
+    margin-top: 10%;
+    width: 90%;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+* {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-color);
+}
+
+.fof {
+    font-size: 110px;
+    font-family: 'JetBrains Mono Bold', monospace;
+    text-align: center;
+}
+
+.pnf {
+    font-size: 22px;
+    text-align: center;
+}
+
+.cryduck-container{
+    display: flex;
+    margin-top: 50px;
+    justify-content: center;
+    align-items: center;
+}
+.cryduck-img{
+    width: 125px;
+}
