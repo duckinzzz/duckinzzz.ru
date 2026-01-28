@@ -70,6 +70,7 @@
     const allData = {{ data|safe }};
     const defaultPlayer = "{{ default_player }}";
     const select = document.getElementById("playerSelect");
+    const chartId = 'chart';
 
     Object.keys(allData).forEach(player => {
         const option = document.createElement("option");
@@ -81,22 +82,29 @@
 
     function renderChart(player) {
         const data = allData[player];
+
         if (!data || !data.x || data.x.length === 0) {
-            Plotly.react('chart', [], {
+            Plotly.react(chartId, [], {
                 title: 'Нет данных для выбранного игрока',
                 plot_bgcolor: '#f8f9fa',
                 paper_bgcolor: 'white'
             });
             return;
         }
+
         const colors = data.custom.map(c => c.change > 0 ? '#28a745' : '#dc3545');
-        Plotly.newPlot('chart', [{
+
+        Plotly.newPlot(chartId, [{
             x: data.x,
             y: data.y,
             mode: 'lines+markers',
             customdata: data.custom,
             line: {color: '#667eea', width: 3},
-            marker: {color: colors, size: 10, line: {color: 'white', width: 2}},
+            marker: {
+                color: colors,
+                size: 10,
+                line: {color: 'white', width: 2}
+            },
             hovertemplate:
                 'Дата %{customdata.battle_time}<br>' +
                 'Трофеи: %{y}<br>' +
@@ -108,12 +116,41 @@
                 range: [Math.max(0, data.x.length - 10), data.x.length],
                 rangeslider: {visible: true}
             },
-            yaxis: {title: {text: 'Количество трофеев', font: {size: 14, weight: 600}}},
+            yaxis: {
+                title: {text: 'Количество трофеев', font: {size: 14, weight: 600}},
+                autorange: false
+            },
             margin: {t: 40, b: 60, l: 60, r: 40},
             plot_bgcolor: '#f8f9fa',
             paper_bgcolor: 'white',
             font: {family: 'Segoe UI, sans-serif'}
         }, {responsive: true});
+
+        enableAutoScaleY(chartId, data);
+    }
+
+    function enableAutoScaleY(chartId, data) {
+        const chart = document.getElementById(chartId);
+
+        chart.removeAllListeners?.('plotly_relayout');
+
+        chart.on('plotly_relayout', e => {
+            if (!e['xaxis.range[0]'] || !e['xaxis.range[1]']) return;
+
+            const xStart = Math.floor(e['xaxis.range[0]']);
+            const xEnd = Math.ceil(e['xaxis.range[1]']);
+
+            const visibleY = data.y.slice(xStart, xEnd);
+            if (!visibleY.length) return;
+
+            const minY = Math.min(...visibleY);
+            const maxY = Math.max(...visibleY);
+            const padding = (maxY - minY) * 0.1 || 5;
+
+            Plotly.relayout(chartId, {
+                'yaxis.range': [minY - padding, maxY + padding]
+            });
+        });
     }
 
     select.addEventListener("change", e => renderChart(e.target.value));

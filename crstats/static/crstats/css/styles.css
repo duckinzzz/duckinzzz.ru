@@ -281,3 +281,44 @@ body {
     font-size: 12px;
     color: #9aa0a6;
 }
+
+.last-battles ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.battle-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 70px 90px;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 14px;
+}
+
+.player {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.trophies,
+.change,
+.battle-time {
+    text-align: right;
+}
+
+.change.win {
+    color: #4caf50;
+}
+
+.change.loss {
+    color: #f44336;
+}
+
+.battle-time {
+    color: #9e9e9e;
+    font-size: 12px;
+}
