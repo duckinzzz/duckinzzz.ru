@@ -21,7 +21,15 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_SSH_PORT }}
           script: |
+            set -e
+
             cd /srv/duckinzzz.ru
+
+            git checkout master
+            git pull --ff-only
+
+            echo "Deploying"
+            git log -1 --pretty=format:"Commit: %H%nMessage: %s"
 
             cat > .env <<EOF
             SECRET_KEY=${{ secrets.SECRET_KEY }}
@@ -34,7 +42,5 @@ jobs:
             DB_PORT=${{ secrets.DB_PORT }}
             EOF
 
-            git fetch origin
-            git reset --hard origin/main
-            docker compose build
-            docker compose up -d --remove-orphans
+            docker compose up -d --build --remove-orphans
+          
