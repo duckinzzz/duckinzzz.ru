@@ -74,7 +74,7 @@ def index(request):
             'y': [log.starting_trophies + log.trophy_change for log in logs],
             'custom': [
                 {
-                    'battle_time': log.battle_time.strftime("%d.%m.%Y %H:%M"),
+                    'battle_time': log.battle_time.isoformat(),
                     'change': log.trophy_change,
                     'enemy': log.enemy_tag,
                     'battle_info': battle_info_from_raw(log.raw_data)
@@ -96,7 +96,6 @@ def index(request):
         }
         for log in last_battles
     ]
-    print(data["grandison"]['custom'][0]['battle_info'])
     return render(
         request,
         "crstats/index.html",
