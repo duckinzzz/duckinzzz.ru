@@ -17,8 +17,9 @@ body {
     background: white;
     border-radius: 20px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    overflow: hidden;
+    /*overflow: hidden; КЛИПАЕТ ХОВЕР НА ТОЧКАХ, НО ЕСЛИ ОФФНУТЬ ТО УБИРАЕТ БОРДЕР РАДИУС*/
 }
+
 
 .header {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
@@ -79,25 +80,6 @@ body {
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
-.chart-container {
-    padding: 30px;
-}
-
-#chart {
-    border-radius: 10px;
-    overflow: hidden;
-    min-height: 500px;
-}
-
-.stats-info {
-    padding: 20px 30px;
-    background: #f8f9fa;
-    border-top: 2px solid #e9ecef;
-    text-align: center;
-    color: #6c757d;
-    font-size: 0.9em;
-}
-
 .legend {
     display: flex;
     justify-content: center;
@@ -126,69 +108,138 @@ body {
     background: #dc3545;
 }
 
-@media (max-width: 768px) {
-    .header h1 {
-        font-size: 1.8em;
-    }
-
-    .control-group {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .chart-container {
-        padding: 15px;
-    }
-}
-
-.last-battles {
-    margin-top: 30px;
-    padding: 20px;
-    background: #ffffff;
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.last-battles h3 {
-    margin-bottom: 12px;
-}
-
-.last-battles ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.last-battles li {
-    display: flex;
-    gap: 6px;
-    padding: 6px 0;
-    font-size: 15px;
-}
-
-.last-battles .player {
-    font-weight: 600;
-}
-
-.last-battles .change.win {
-    color: #28a745;
-    font-weight: 600;
-}
-
-.last-battles .change.loss {
-    color: #dc3545;
-    font-weight: 600;
-}
-
 .main-content {
     display: grid;
     grid-template-columns: 1fr 320px;
     gap: 24px;
+    padding: 30px;
     align-items: start;
 }
 
-/* ---------- Последние бои ---------- */
+/* Chart wrapper and container */
+.chart-wrapper {
+    position: relative;
+    width: 100%;
+}
 
+.chart-container {
+    position: relative;
+    height: 500px;
+    width: 100%;
+}
+
+#battleChart {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Custom hover tooltip */
+#customHover {
+    position: absolute;
+    pointer-events: none;
+    background: rgba(0, 0, 0, 0.92);
+    color: white;
+    padding: 15px;
+    border-radius: 10px;
+    display: none;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 13px;
+    z-index: 1000;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+#customHover .tooltip-header {
+    margin-bottom: 12px;
+}
+
+#customHover .tooltip-header > div {
+    margin-bottom: 6px;
+}
+
+#customHover .tooltip-header strong {
+    color: #aaa;
+    font-weight: 600;
+}
+
+#customHover .tooltip-header .win {
+    color: #4caf50;
+    font-weight: 700;
+}
+
+#customHover .tooltip-header .loss {
+    color: #f44336;
+    font-weight: 700;
+}
+
+#customHover hr {
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    margin: 10px 0;
+}
+
+#customHover .battle-layout {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#customHover .deck-column {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+#customHover .deck-label {
+    font-size: 11px;
+    color: #bbb;
+    font-weight: 600;
+    text-align: center;
+}
+
+#customHover .deck-stats {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 6px;
+    text-align: center;
+}
+
+#customHover .stat-item {
+    font-size: 10px;
+    color: #999;
+}
+
+#customHover .score-divider {
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+}
+
+#customHover .score {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+}
+
+#customHover .player-cards,
+#customHover .enemy-cards {
+    display: grid;
+    grid-template-columns: repeat(4, min-content);
+    grid-template-rows: repeat(2, min-content);
+    gap: 2px;
+}
+
+#customHover .player-cards img,
+#customHover .enemy-cards img {
+    display: block;
+    max-width: 50px !important;
+    max-height: 50px !important;
+    width: auto !important;
+    height: auto !important;
+}
+
+/* Last battles sidebar */
 .last-battles {
     background: #ffffff;
     border-radius: 14px;
@@ -196,12 +247,15 @@ body {
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
     position: sticky;
     top: 20px;
+    max-height: 600px;
+    overflow-y: auto;
 }
 
 .last-battles h3 {
     margin-bottom: 14px;
     font-size: 18px;
     font-weight: 600;
+    color: #333;
 }
 
 .last-battles ul {
@@ -211,56 +265,7 @@ body {
 }
 
 .battle-row {
-    display: grid;
-    grid-template-columns: 1fr auto auto;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px solid #f0f0f0;
-    font-size: 14px;
-}
-
-.battle-row:last-child {
-    border-bottom: none;
-}
-
-.player {
-    font-weight: 600;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.trophies {
-    color: #6c757d;
-    margin-right: 6px;
-    font-variant-numeric: tabular-nums;
-}
-
-.change {
-    font-weight: 700;
-    font-variant-numeric: tabular-nums;
-}
-
-.change.win {
-    color: #28a745;
-}
-
-.change.loss {
-    color: #dc3545;
-}
-
-@media (max-width: 900px) {
-    .main-content {
-        grid-template-columns: 1fr;
-    }
-
-    .last-battles {
-        position: static;
-    }
-}
-
-.battle-row {
-    padding: 8px 0;
+    padding: 10px 0;
     border-bottom: 1px solid #f0f0f0;
 }
 
@@ -272,53 +277,107 @@ body {
     display: grid;
     grid-template-columns: 1fr auto auto;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     font-size: 14px;
 }
 
 .battle-time {
-    margin-top: 2px;
+    margin-top: 4px;
     font-size: 12px;
     color: #9aa0a6;
 }
 
-.last-battles ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-
-.battle-row {
-    display: grid;
-    grid-template-columns: 1fr 80px 70px 90px;
-    align-items: center;
-    gap: 8px;
-    padding: 6px 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    font-size: 14px;
-}
-
 .player {
+    font-weight: 600;
+    color: #333;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
 
-.trophies,
-.change,
-.battle-time {
-    text-align: right;
+.trophies {
+    color: #6c757d;
+    font-variant-numeric: tabular-nums;
+    font-size: 13px;
+}
+
+.change {
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    font-size: 14px;
 }
 
 .change.win {
-    color: #4caf50;
+    color: #28a745;
 }
 
 .change.loss {
-    color: #f44336;
+    color: #dc3545;
 }
 
-.battle-time {
-    color: #9e9e9e;
-    font-size: 12px;
+.stats-info {
+    padding: 20px 30px;
+    background: #f8f9fa;
+    border-top: 2px solid #e9ecef;
+    text-align: center;
+    color: #6c757d;
+    font-size: 0.9em;
+}
+
+/* Responsive design */
+@media (max-width: 900px) {
+    .main-content {
+        grid-template-columns: 1fr;
+    }
+
+    .last-battles {
+        position: static;
+        max-height: none;
+    }
+
+    #customHover {
+        min-width: 320px;
+    }
+
+    #customHover .battle-layout {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    #customHover .score-divider {
+        padding: 4px 0;
+    }
+
+    #customHover .player-cards,
+    #customHover .enemy-cards {
+        display: grid;
+        grid-template-columns: repeat(4, min-content);
+        grid-template-rows: repeat(2, min-content);
+        gap: 2px;
+    }
+
+    #customHover .battle-cards img {
+        display: block;
+        max-width: 40px !important;
+        max-height: 40px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .header h1 {
+        font-size: 1.8em;
+    }
+
+    .control-group {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .chart-container {
+        height: 400px;
+    }
+
+    .main-content {
+        padding: 15px;
+    }
 }

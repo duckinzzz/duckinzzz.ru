@@ -8,14 +8,18 @@
     <title>Clech Royale Stats</title>
     <link rel="icon" type="image/png" href="{% static 'crstats/images/favicon.png' %}">
     <link rel="stylesheet" href="{% static 'crstats/css/styles.css' %}">
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
+
 <div class="container">
     <div class="header">
         <h1>🏆 Clech Royale Stats</h1>
         <p>Отслеживание трофеев по боям</p>
     </div>
+
     <div class="controls">
         <div class="control-group">
             <label for="playerSelect">Выберите игрока:</label>
@@ -35,8 +39,11 @@
     </div>
 
     <div class="main-content">
-        <div class="chart-container">
-            <div id="chart"></div>
+        <div class="chart-wrapper">
+            <div class="chart-container">
+                <canvas id="battleChart"></canvas>
+            </div>
+            <div id="customHover"></div>
         </div>
 
         <div class="last-battles">
@@ -50,16 +57,12 @@
                             <span class="change {% if battle.change > 0 %}win{% else %}loss{% endif %}">
                             {% if battle.change > 0 %}+{% endif %}{{ battle.change }}</span>
                         </div>
-                        <div class="battle-time">
-                            {{ battle.ago }}
-                        </div>
+                        <div class="battle-time">{{ battle.ago }}</div>
                     </li>
-
                 {% endfor %}
             </ul>
         </div>
     </div>
-
 
     <div class="stats-info">
         Данные обновляются автоматически каждые 90 секунд
@@ -67,94 +70,177 @@
 </div>
 
 <script>
-    const allData = {{ data|safe }};
+    const ctx = document.getElementById('battleChart').getContext('2d');
+    const hoverDiv = document.getElementById('customHover');
+    const select = document.getElementById('playerSelect');
+    const dataObj = {{ data|safe }};
     const defaultPlayer = "{{ default_player }}";
-    const select = document.getElementById("playerSelect");
-    const chartId = 'chart';
 
-    Object.keys(allData).forEach(player => {
-        const option = document.createElement("option");
+    function buildCardsLayout(cards) {
+        return cards.map(c => {
+            const iconUrl = (c.isEvo === 'True' && c.iconUrls.evolutionMedium)
+                ? c.iconUrls.evolutionMedium
+                : c.iconUrls.medium;
+            return `<img src="${iconUrl}" alt="${c.name}" title="${c.name}" />`;
+        }).join('');
+    }
+
+    function buildTooltipHTML(pointData) {
+        if (!pointData || !pointData.battle_info) return `<div>Нет данных</div>`;
+        const info = pointData.battle_info;
+
+        // Get scores (crowns)
+        const playerCrowns = info.player.crowns || 0;
+        const enemyCrowns = info.enemy.crowns || 0;
+
+        // Calculate average levels
+        const playerAvgLevel = (info.player.cards.reduce((sum, c) => sum + c.level, 0) / info.player.cards.length).toFixed(1);
+        const enemyAvgLevel = (info.enemy.cards.reduce((sum, c) => sum + c.level, 0) / info.enemy.cards.length).toFixed(1);
+
+        function calculateAdjustedAvg(cards) {
+            const nonZeroCards = cards.filter(c => c.elixirCost !== 0);
+            const zeroCard = cards.find(c => c.elixirCost === 0);
+
+            // Минимальная и максимальная стоимость среди остальных карт
+            const minCost = Math.min(...nonZeroCards.map(c => c.elixirCost));
+            const maxCost = Math.max(...nonZeroCards.map(c => c.elixirCost));
+
+            // Если есть карта с elixirCost = 0
+            if (zeroCard) {
+                const avgMin = (nonZeroCards.reduce((sum, c) => sum + c.elixirCost, 0) + (minCost + 1)) / cards.length;
+                const avgMax = (nonZeroCards.reduce((sum, c) => sum + c.elixirCost, 0) + (maxCost + 1)) / cards.length;
+                return ((avgMin + avgMax) / 2).toFixed(1);
+            } else {
+                // Просто обычный средний
+                const avg = cards.reduce((sum, c) => sum + (c.elixirCost || 0), 0) / cards.length;
+                return avg.toFixed(1);
+            }
+        }
+
+// Пример использования
+        const playerAvgCost = calculateAdjustedAvg(info.player.cards);
+        const enemyAvgCost = calculateAdjustedAvg(info.enemy.cards);
+        return `
+        <div class="tooltip-header">
+            <div><strong>Противник:</strong> ${info.enemy.nickname}</div>
+            <div><strong>Результат:</strong> <span class="${pointData.change > 0 ? 'win' : 'loss'}">${pointData.change > 0 ? 'Победа' : 'Поражение'} (${pointData.change > 0 ? '+' : ''}${pointData.change})</span></div>
+            <div><strong>Время:</strong> ${pointData.battle_time}</div>
+        </div>
+        <hr/>
+        <div class="battle-layout">
+            <div class="deck-column">
+                <div class="deck-label">Ваши карты</div>
+                <div class="player-cards">
+                    ${buildCardsLayout(info.player.cards)}
+                </div>
+                <div class="deck-stats">
+                    <div class="stat-item">avg lvl: ${playerAvgLevel}</div>
+                    <div class="stat-item">avg cost: ${playerAvgCost}</div>
+                </div>
+            </div>
+            <div class="score-divider">
+                <div class="score">Счет ${playerCrowns}:${enemyCrowns}</div>
+            </div>
+            <div class="deck-column">
+                <div class="deck-label">Противник</div>
+                <div class="enemy-cards">
+                    ${buildCardsLayout(info.enemy.cards)}
+                </div>
+                <div class="deck-stats">
+                    <div class="stat-item">avg lvl: ${enemyAvgLevel}</div>
+                    <div class="stat-item">avg cost: ${enemyAvgCost}</div>
+                </div>
+            </div>
+        </div>
+    `;
+    }
+
+    // Заполняем select игроками
+    Object.keys(dataObj).forEach(player => {
+        const option = document.createElement('option');
         option.value = player;
         option.textContent = player;
         if (player === defaultPlayer) option.selected = true;
         select.appendChild(option);
     });
 
-    function renderChart(player) {
-        const data = allData[player];
+    let battleChart;
 
-        if (!data || !data.x || data.x.length === 0) {
-            Plotly.react(chartId, [], {
-                title: 'Нет данных для выбранного игрока',
-                plot_bgcolor: '#f8f9fa',
-                paper_bgcolor: 'white'
-            });
-            return;
-        }
+    function renderChart(playerName) {
+        const playerData = dataObj[playerName];
+        if (!playerData) return;
 
-        const colors = data.custom.map(c => c.change > 0 ? '#28a745' : '#dc3545');
+        const total = playerData.x.length;
+        const start = Math.max(0, total - 20); // последние 20 боёв
 
-        Plotly.newPlot(chartId, [{
-            x: data.x,
-            y: data.y,
-            mode: 'lines+markers',
-            customdata: data.custom,
-            line: {color: '#667eea', width: 3},
-            marker: {
-                color: colors,
-                size: 10,
-                line: {color: 'white', width: 2}
-            },
-            hovertemplate:
-                'Дата %{customdata.battle_time}<br>' +
-                'Трофеи: %{y}<br>' +
-                'Изменение: %{customdata.change}<br>' +
-                'Противник: %{customdata.enemy}<extra></extra>'
-        }], {
-            xaxis: {
-                title: {text: 'Номер боя', font: {size: 14, weight: 600}},
-                range: [Math.max(0, data.x.length - 10), data.x.length],
-                rangeslider: {visible: true}
-            },
-            yaxis: {
-                title: {text: 'Количество трофеев', font: {size: 14, weight: 600}},
-                autorange: false
-            },
-            margin: {t: 40, b: 60, l: 60, r: 40},
-            plot_bgcolor: '#f8f9fa',
-            paper_bgcolor: 'white',
-            font: {family: 'Segoe UI, sans-serif'}
-        }, {responsive: true});
+        const chartData = {
+            labels: playerData.x.slice(start),
+            datasets: [{
+                label: 'Трофеи',
+                data: playerData.y.slice(start),
+                backgroundColor: playerData.custom.slice(start).map(c => c.change > 0 ? '#28a745' : '#dc3545'),
+                borderColor: '#667eea',
+                borderWidth: 2,
+                pointRadius: 6,
+                pointHoverRadius: 8,
+                pointBackgroundColor: playerData.custom.slice(start).map(c => c.change > 0 ? '#28a745' : '#dc3545'),
+                custom: playerData.custom.slice(start)
+            }]
+        };
 
-        enableAutoScaleY(chartId, data);
-    }
+        if (battleChart instanceof Chart) battleChart.destroy();
 
-    function enableAutoScaleY(chartId, data) {
-        const chart = document.getElementById(chartId);
+        battleChart = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {display: false},
+                    tooltip: {
+                        enabled: false,
+                        external: context => {
+                            const point = context.tooltip.dataPoints?.[0];
+                            if (!point || !point.dataset?.custom) {
+                                hoverDiv.style.display = 'none';
+                                return;
+                            }
+                            const pointData = point.dataset.custom[point.dataIndex];
+                            if (!pointData) {
+                                hoverDiv.style.display = 'none';
+                                return;
+                            }
 
-        chart.removeAllListeners?.('plotly_relayout');
+                            const canvasRect = ctx.canvas.getBoundingClientRect();
+                            hoverDiv.innerHTML = buildTooltipHTML(pointData);
 
-        chart.on('plotly_relayout', e => {
-            if (!e['xaxis.range[0]'] || !e['xaxis.range[1]']) return;
+                            // Position tooltip
+                            const tooltipX = point.element.x + 15;
+                            const tooltipY = point.element.y - 10;
 
-            const xStart = Math.floor(e['xaxis.range[0]']);
-            const xEnd = Math.ceil(e['xaxis.range[1]']);
-
-            const visibleY = data.y.slice(xStart, xEnd);
-            if (!visibleY.length) return;
-
-            const minY = Math.min(...visibleY);
-            const maxY = Math.max(...visibleY);
-            const padding = (maxY - minY) * 0.1 || 5;
-
-            Plotly.relayout(chartId, {
-                'yaxis.range': [minY - padding, maxY + padding]
-            });
+                            hoverDiv.style.left = tooltipX + 'px';
+                            hoverDiv.style.top = tooltipY + 'px';
+                            hoverDiv.style.display = 'block';
+                        }
+                    }
+                },
+                scales: {
+                    x: {title: {display: true, text: 'Номер боя'}},
+                    y: {title: {display: true, text: 'Трофеи'}, beginAtZero: false}
+                }
+            }
         });
     }
 
-    select.addEventListener("change", e => renderChart(e.target.value));
+    // Запуск графика для игрока по умолчанию
     renderChart(defaultPlayer);
+    select.addEventListener('change', e => renderChart(e.target.value));
+
+    // Hide tooltip when mouse leaves chart
+    ctx.canvas.addEventListener('mouseleave', () => {
+        hoverDiv.style.display = 'none';
+    });
 </script>
 </body>
 </html>

@@ -1,6 +1,6 @@
-from django.utils import timezone
-from datetime import timedelta
 from django.shortcuts import render
+from django.utils import timezone
+
 from .models import BattleLog
 
 PLAYERS = {
@@ -13,17 +13,55 @@ PLAYERS = {
     "#22009JPCCQ": "flamboyx",
 }
 
+
+def russian_plural(n, forms):
+    n = abs(n) % 100
+    if 11 <= n <= 14:
+        return forms[2]  # форма для 5+
+    n = n % 10
+    if n == 1:
+        return forms[0]  # форма для 1
+    if 2 <= n <= 4:
+        return forms[1]  # форма для 2-4
+    return forms[2]  # все остальные
+
+
 def humanize_time(delta):
-    minutes = int(delta.total_seconds() // 60)
+    seconds = int(delta.total_seconds())
+    minutes = seconds // 60
     hours = minutes // 60
     days = hours // 24
 
-    if minutes < 60:
-        return f"{minutes} мин назад"
+    if seconds < 60:
+        return f"{seconds} {russian_plural(seconds, ['секунда', 'секунды', 'секунд'])} назад"
+    elif minutes < 60:
+        return f"{minutes} {russian_plural(minutes, ['минута', 'минуты', 'минут'])} назад"
     elif hours < 24:
-        return f"{hours} час назад" if hours == 1 else f"{hours} часов назад"
+        return f"{hours} {russian_plural(hours, ['час', 'часа', 'часов'])} назад"
     else:
-        return f"{days} день назад" if days == 1 else f"{days} дней назад"
+        return f"{days} {russian_plural(days, ['день', 'дня', 'дней'])} назад"
+
+
+def battle_info_from_raw(raw):
+    def format_cards(cards):
+        return [
+            {
+                'name': card['name'],
+                'level': card['level'],
+                'rarity': card['rarity'],
+                'elixirCost': card.get('elixirCost', 0),
+                'iconUrls': card['iconUrls'],
+                'isEvo': 'True' if card.get('evolutionLevel') else 'False'
+            }
+            for card in cards
+        ]
+
+    p, e = raw['team'][0], raw['opponent'][0]
+
+    return {
+        'player': {'crowns': p['crowns'], 'cards': format_cards(p['cards'])},
+        'enemy': {'nickname': e['name'], 'crowns': e['crowns'], 'cards': format_cards(e['cards'])}
+    }
 
 
 def index(request):
@@ -38,7 +76,8 @@ def index(request):
                 {
                     'battle_time': log.battle_time.strftime("%d.%m.%Y %H:%M"),
                     'change': log.trophy_change,
-                    'enemy': log.enemy_tag
+                    'enemy': log.enemy_tag,
+                    'battle_info': battle_info_from_raw(log.raw_data)
                 }
                 for log in logs
             ]
@@ -57,7 +96,7 @@ def index(request):
         }
         for log in last_battles
     ]
-
+    print(data["grandison"]['custom'][0]['battle_info'])
     return render(
         request,
         "crstats/index.html",
