@@ -13,6 +13,13 @@ PLAYERS = {
     "#22009JPCCQ": "flamboyx",
 }
 
+base_lvl = {
+	'common': 1,
+	'rare': 3,
+	'epic': 6,
+	'legendary': 9,
+	'champion': 11,
+}
 
 def russian_plural(n, forms):
     n = abs(n) % 100
@@ -47,7 +54,7 @@ def battle_info_from_raw(raw):
         return [
             {
                 'name': card['name'],
-                'level': card['level'],
+                'level': card['level'] + base_lvl[card['rarity']] - 1,
                 'rarity': card['rarity'],
                 'elixirCost': card.get('elixirCost', 0),
                 'iconUrls': card['iconUrls'],

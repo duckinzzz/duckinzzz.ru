@@ -230,13 +230,30 @@ body {
     gap: 2px;
 }
 
+#customHover .card-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
 #customHover .player-cards img,
 #customHover .enemy-cards img {
     display: block;
-    max-width: 50px !important;
-    max-height: 50px !important;
+    max-height: 80px !important;
     width: auto !important;
     height: auto !important;
+}
+
+#customHover .card-level {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    background: rgba(0, 0, 0, 0.7);
+    color: #4dabf7;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 1px 4px;
+    border-radius: 3px;
+    line-height: 1;
 }
 
 /* Last battles sidebar */

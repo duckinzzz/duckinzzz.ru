@@ -100,7 +100,12 @@
             const iconUrl = (c.isEvo === 'True' && c.iconUrls.evolutionMedium)
                 ? c.iconUrls.evolutionMedium
                 : c.iconUrls.medium;
-            return `<img src="${iconUrl}" alt="${c.name}" title="${c.name}" />`;
+            return `
+                <div class="card-wrapper">
+                    <img src="${iconUrl}" alt="${c.name}" title="${c.name}" />
+                    <span class="card-level">${c.level}</span>
+                </div>
+            `;
         }).join('');
     }
 
