@@ -254,6 +254,12 @@ body {
     padding: 1px 4px;
     border-radius: 3px;
     line-height: 1;
+    opacity: 0;
+    transition: opacity 0.1s;
+}
+
+#customHover .card-wrapper.loaded .card-level {
+    opacity: 1;
 }
 
 /* Last battles sidebar */

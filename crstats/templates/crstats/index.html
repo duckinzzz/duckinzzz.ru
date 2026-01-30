@@ -102,7 +102,7 @@
                 : c.iconUrls.medium;
             return `
                 <div class="card-wrapper">
-                    <img src="${iconUrl}" alt="${c.name}" title="${c.name}" />
+                    <img src="${iconUrl}" alt="${c.name}" title="${c.name}" onload="this.parentElement.classList.add('loaded')" />
                     <span class="card-level">${c.level}</span>
                 </div>
             `;
