@@ -1,4 +1,8 @@
-# docker-compose -f docker-compose.prod.yml up -d --build
+# docker compose -f docker-compose.prod.yml up -d --build
+networks:
+  duckinzzz_net:
+    name: duckinzzz_net
+    driver: bridge
 
 services:
   web:
@@ -12,12 +16,11 @@ services:
     expose:
       - "8000"
     entrypoint: [ "/bin/bash", "/app/entrypoint.sh" ]
-    depends_on:
-      - nginx
     restart: unless-stopped
-    # Для доступа к локальной PostgreSQL на хосте
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    networks:
+      - duckinzzz_net
 
   nginx:
     image: nginx:alpine
@@ -31,6 +34,8 @@ services:
     depends_on:
       - web
     restart: unless-stopped
+    networks:
+      - duckinzzz_net
 
 volumes:
   static_volume:
