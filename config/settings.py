@@ -36,6 +36,16 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+CELERY_BROKER_URL = "redis://redis:6379/0"
+CELERY_RESULT_BACKEND = "redis://redis:6379/0"
+
+CELERY_BEAT_SCHEDULE = {
+    'update-battles-every-90-seconds': {
+        'task': 'crstats.tasks.update_battles_task',
+        'schedule': 90.0,
+    },
+}
+
 ROOT_URLCONF = 'config.urls'
 
 TEMPLATES = [

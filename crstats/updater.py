@@ -1,5 +1,3 @@
-import threading
-import time
 from datetime import datetime
 
 import pandas as pd
@@ -80,17 +78,3 @@ def update_database():
             )
             print(f"  ✓ {PLAYERS[row['player_tag']]}: новый бой {row['battle_time']}")
     print(f"[{datetime.now().strftime('%H:%M:%S')}] Проверка завершена.\n")
-
-
-def start_background_updater():
-    def run():
-        while True:
-            try:
-                update_database()
-            except Exception as e:
-                print(f"Ошибка фонового обновления: {e}")
-            time.sleep(90)
-
-    thread = threading.Thread(target=run, daemon=True)
-    thread.start()
-    print("🚀 Фоновое обновление crstats запущено")

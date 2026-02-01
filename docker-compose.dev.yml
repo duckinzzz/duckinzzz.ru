@@ -1,3 +1,8 @@
+networks:
+  duckinzzz_net:
+    name: duckinzzz_net
+    driver: bridge
+
 services:
   web:
     build:
@@ -15,7 +20,38 @@ services:
     command: python manage.py runserver 0.0.0.0:8000
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    restart: unless-stopped
+    networks:
+      - duckinzzz_net
+
+  celery:
+    build: .
+    command: celery -A config worker --loglevel=info
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - web
+    networks:
+      - duckinzzz_net
+
+  celery-beat:
+    build: .
+    command: celery -A config beat --loglevel=info
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - web
+    networks:
+      - duckinzzz_net
+
+  redis:
+    image: redis:alpine
+    container_name: duckinzzz_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - duckinzzz_net
 
   # nginx:
   #   image: nginx:alpine
