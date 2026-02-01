@@ -98,10 +98,6 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
-STATICFILES_DIRS = [
-    BASE_DIR / "frontend" / "static",
-    BASE_DIR / "crstats" / "static",
-]
 
 STATIC_ROOT = BASE_DIR / "static"
 
