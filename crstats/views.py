@@ -77,7 +77,7 @@ def battle_info_from_raw(raw):
 def index(request):
     data = {}
 
-    MAX_BATTLES_PER_PLAYER = 20
+    MAX_BATTLES_PER_PLAYER = 1000
 
     recent_cutoff = timezone.now() - timedelta(days=7)
 
