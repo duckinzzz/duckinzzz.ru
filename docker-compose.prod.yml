@@ -29,7 +29,6 @@ services:
 
   celery:
     build: .
-    command: celery -A config worker --loglevel=info
     env_file:
       - .env
     depends_on:
@@ -37,6 +36,14 @@ services:
       - web
     networks:
       - duckinzzz_net
+    entrypoint: [ ]  # Clear any inherited entrypoint
+    command: celery -A config worker --loglevel=info --concurrency=2
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
 
   celery-beat:
     build: .

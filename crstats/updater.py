@@ -1,7 +1,7 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
-import pandas as pd
 import requests
+from django.utils import timezone
 
 from config import settings
 from .models import BattleLog
@@ -22,59 +22,69 @@ PLAYERS = {
 def fetch_battlelog(player_tag):
     tag_encoded = player_tag.replace("#", "%23")
     url = f"https://api.clashroyale.com/v1/players/{tag_encoded}/battlelog"
-    response = requests.get(url, headers={"Authorization": f"Bearer {API_TOKEN}"})
-    return response.json()
 
-
-def build_dataframe(battlelog):
-    rows = []
-    for battle in battlelog:
-        if battle.get("type") == "PvP":
-            rows.append({
-                "battle_time": pd.to_datetime(battle["battleTime"], utc=True),
-                "starting_trophies": int(battle["team"][0]["startingTrophies"]),
-                "trophy_change": int(battle["team"][0].get("trophyChange", 0)),
-                "player_tag": battle["team"][0]["tag"],
-                "enemy_tag": battle["opponent"][0]["tag"],
-                "raw_data": battle,
-            })
-    return pd.DataFrame(rows).sort_values("battle_time").reset_index(drop=True)
+    try:
+        response = requests.get(
+            url,
+            headers={"Authorization": f"Bearer {API_TOKEN}"},
+            timeout=10
+        )
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as e:
+        print(f"  ✗ API Error for {player_tag}: {e}")
+        return []
 
 
 def update_database():
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] Проверка обновлений...")
-    all_battles = []
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] Checking for updates...")
 
-    for tag in PLAYERS.keys():
+    cutoff_time = timezone.now() - timedelta(hours=24)
+
+    new_battles_count = 0
+
+    for player_tag, player_name in PLAYERS.items():
         try:
-            df = build_dataframe(fetch_battlelog(tag))
-            all_battles.append(df)
-        except Exception as e:
-            print(f"  ✗ Ошибка для {PLAYERS[tag]}: {e}")
+            battlelog = fetch_battlelog(player_tag)
+            if not battlelog:
+                continue
 
-    if not all_battles:
-        return
-
-    df_new = pd.concat(all_battles, ignore_index=True)
-    df_new = df_new.sort_values("battle_time").reset_index(drop=True)
-
-    for tag in PLAYERS.keys():
-        existing = BattleLog.objects.filter(player_tag=tag).order_by("-battle_time")[:50]
-        df_existing = pd.DataFrame(list(existing.values("player_tag", "battle_time")))
-
-        df_check = df_new[df_new["player_tag"] == tag].merge(
-            df_existing, on=["player_tag", "battle_time"], how="left", indicator=True
-        )
-        df_fresh = df_check[df_check["_merge"] == "left_only"].drop(columns="_merge")
-
-        for _, row in df_fresh.iterrows():
-            BattleLog.objects.create(
-                battle_time=row["battle_time"],
-                player_tag=row["player_tag"],
-                enemy_tag=row["enemy_tag"],
-                starting_trophies=row["starting_trophies"],
-                trophy_change=row["trophy_change"],
-                raw_data=row["raw_data"],
+            existing_times = set(
+                BattleLog.objects.filter(
+                    player_tag=player_tag,
+                    battle_time__gte=cutoff_time
+                ).values_list('battle_time', flat=True)
             )
-            print(f"  ✓ {PLAYERS[row['player_tag']]}: новый бой {row['battle_time']}")
-    print(f"[{datetime.now().strftime('%H:%M:%S')}] Проверка завершена.\n")
+
+            for battle in battlelog:
+                if battle.get("type") != "PvP":
+                    continue
+
+                battle_time = timezone.datetime.fromisoformat(
+                    battle["battleTime"].replace('Z', '+00:00')
+                )
+
+                if battle_time in existing_times:
+                    continue
+
+                if battle_time < cutoff_time:
+                    continue
+
+                try:
+                    BattleLog.objects.create(
+                        battle_time=battle_time,
+                        player_tag=battle["team"][0]["tag"],
+                        enemy_tag=battle["opponent"][0]["tag"],
+                        starting_trophies=int(battle["team"][0]["startingTrophies"]),
+                        trophy_change=int(battle["team"][0].get("trophyChange", 0)),
+                        raw_data=battle,
+                    )
+                    print(f"  ✓ {player_name}: new battle at {battle_time.strftime('%H:%M:%S')}")
+                    new_battles_count += 1
+                except Exception as e:
+                    print(f"  ✗ Error saving battle for {player_name}: {e}")
+
+        except Exception as e:
+            print(f"  ✗ Error processing {player_name}: {e}")
+
+    print(f"[{datetime.now().strftime('%H:%M:%S')}] Check complete. Added {new_battles_count} new battles.\n")

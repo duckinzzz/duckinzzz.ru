@@ -1,3 +1,5 @@
+from datetime import timedelta
+
 from django.shortcuts import render
 from django.utils import timezone
 
@@ -14,23 +16,24 @@ PLAYERS = {
 }
 
 base_lvl = {
-	'common': 1,
-	'rare': 3,
-	'epic': 6,
-	'legendary': 9,
-	'champion': 11,
+    'common': 1,
+    'rare': 3,
+    'epic': 6,
+    'legendary': 9,
+    'champion': 11,
 }
+
 
 def russian_plural(n, forms):
     n = abs(n) % 100
     if 11 <= n <= 14:
-        return forms[2]  # форма для 5+
+        return forms[2]
     n = n % 10
     if n == 1:
-        return forms[0]  # форма для 1
+        return forms[0]
     if 2 <= n <= 4:
-        return forms[1]  # форма для 2-4
-    return forms[2]  # все остальные
+        return forms[1]
+    return forms[2]
 
 
 def humanize_time(delta):
@@ -74,11 +77,21 @@ def battle_info_from_raw(raw):
 def index(request):
     data = {}
 
+    MAX_BATTLES_PER_PLAYER = 20
+
+    recent_cutoff = timezone.now() - timedelta(days=7)
+
     for tag, name in PLAYERS.items():
-        logs = BattleLog.objects.filter(player_tag=tag).order_by('battle_time')
+        logs = BattleLog.objects.filter(
+            player_tag=tag,
+            battle_time__gte=recent_cutoff
+        ).order_by('battle_time')[:MAX_BATTLES_PER_PLAYER]
+
+        logs_list = list(logs)
+
         data[name] = {
-            'x': list(range(1, len(logs) + 1)),
-            'y': [log.starting_trophies + log.trophy_change for log in logs],
+            'x': list(range(1, len(logs_list) + 1)),
+            'y': [log.starting_trophies + log.trophy_change for log in logs_list],
             'custom': [
                 {
                     'battle_time': log.battle_time.isoformat(),
@@ -86,7 +99,7 @@ def index(request):
                     'enemy': log.enemy_tag,
                     'battle_info': battle_info_from_raw(log.raw_data)
                 }
-                for log in logs
+                for log in logs_list
             ]
         }
 
