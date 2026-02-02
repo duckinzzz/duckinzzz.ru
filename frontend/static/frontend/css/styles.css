@@ -2,66 +2,79 @@
     --text-color: #000000FF;
     --bg-color: #EFEFEFFF;
 }
-
 body {
     background-color: var(--bg-color);
 }
-
 .main {
     margin-top: 10%;
     width: 90%;
     max-width: 400px;
     margin-left: auto;
     margin-right: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
-
 * {
     font-family: 'JetBrains Mono', monospace;
     color: var(--text-color);
 }
-
+.quote-links-wrapper {
+    display: inline-block;
+}
 .quote {
     margin-top: 20px;
     font-size: 20px;
     text-align: center;
+    width: 100%;
 }
-
 .name {
     font-size: 39px;
     font-family: 'JetBrains Mono Bold', monospace;
     text-align: center;
 }
-
 .place {
     font-size: 22px;
     text-align: center;
 }
-
 .links {
-    width: 80%;
+    width: 90%;
     margin-left: auto;
     margin-right: auto;
 }
-
-li {
-    list-style-type: none;
-    margin: auto;
-    font-size: 20px;
+.main-links {
+    display: flex;
+    justify-content: space-between;
+    list-style: none;
+    font-size: 18px;
+    width: 100%;
+}
+.center-link {
+    display: flex;
+    justify-content: center;
+    list-style: none;
+    margin: 10px 0 0 0;
+    font-size: 23px;
+}
+.center-link a {
+    color: blueviolet;
 }
 
+
+.main-links li, .center-link li {
+    margin: 0;
+}
 ul {
     padding-left: 0;
     display: flex;
     margin-top: 2px;
 }
-
 .center-container {
     display: flex;
     margin-top: 50px;
     justify-content: center;
     align-items: center;
 }
-
 .duckButton {
     background: none;
     border: none;
@@ -71,7 +84,6 @@ ul {
     opacity: 0;
     transition: opacity 1s;
 }
-
 .duckButton img {
     width: 44px;
 }
