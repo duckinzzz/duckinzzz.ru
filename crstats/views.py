@@ -1,5 +1,3 @@
-from datetime import timedelta
-
 from django.shortcuts import render
 from django.utils import timezone
 
@@ -79,12 +77,9 @@ def index(request):
 
     MAX_BATTLES_PER_PLAYER = 1000
 
-    recent_cutoff = timezone.now() - timedelta(days=7)
-
     for tag, name in PLAYERS.items():
         logs = BattleLog.objects.filter(
             player_tag=tag,
-            battle_time__gte=recent_cutoff
         ).order_by('battle_time')[:MAX_BATTLES_PER_PLAYER]
 
         logs_list = list(logs)
