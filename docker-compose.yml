@@ -1,12 +1,5 @@
 x-app-image: &app-image ghcr.io/duckinzzz/duckinzzz.ru:latest
 
-networks:
-  duckinzzz_net:
-    name: duckinzzz_net
-    driver: bridge
-  proxy:
-    external: true
-
 services:
   web:
     image: *app-image
@@ -34,6 +27,7 @@ services:
 
   celery:
     image: *app-image
+    container_name: duckinzzz_celery
     mem_limit: 120m
     cpus: 0.2
     env_file:
@@ -41,6 +35,8 @@ services:
     depends_on:
       - redis
       - web
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     networks:
       - duckinzzz_net
     entrypoint: [ ]
@@ -49,6 +45,7 @@ services:
 
   celery-beat:
     image: *app-image
+    container_name: duckinzzz_celery_beat
     mem_limit: 80m
     cpus: 0.1
     command: celery -A config beat --loglevel=warning
@@ -59,13 +56,13 @@ services:
       - web
     networks:
       - duckinzzz_net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
   redis:
     image: redis:alpine
     container_name: duckinzzz_redis
-    ports:
-      - "6379:6379"
     networks:
       - duckinzzz_net
     restart: unless-stopped
@@ -79,8 +76,8 @@ services:
       options:
         max-size: "10m"
         max-file: "2"
-    ports:
-      - "8000:80"
+    expose:
+      - "80"
     volumes:
       - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
       - static_volume:/app/static:ro
@@ -93,13 +90,16 @@ services:
       - proxy
     labels:
       - "traefik.enable=true"
-      - "traefik.docker.network=proxy"
-      - "traefik.http.routers.site.rule=Host(`duckinzzz.ru`) || Host(`www.duckinzzz.ru`)"
-      - "traefik.http.routers.site.entrypoints=websecure"
-      - "traefik.http.routers.site.tls=true"
-      - "traefik.http.routers.site.priority=100"
-      - "traefik.http.routers.site.middlewares=cow-errors@file"
-      - "traefik.http.services.site.loadbalancer.server.port=80"
+      - "traefik.http.routers.duck_site.rule=Host(`duckinzzz.ru`) || Host(`www.duckinzzz.ru`)"
+      - "traefik.http.routers.duck_site.entrypoints=websecure"
+      - "traefik.http.routers.duck_site.tls=true"
+      - "traefik.http.services.duck_site.loadbalancer.server.port=80"
+
+networks:
+  duckinzzz_net:
+    driver: bridge
+  proxy:
+    external: true
 
 volumes:
   static_volume:
