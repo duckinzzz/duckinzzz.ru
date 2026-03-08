@@ -40,8 +40,13 @@
 
     <div class="main-content">
         <div class="chart-wrapper">
+            <div class="y-axis-container">
+                <canvas id="yAxisChart"></canvas>
+            </div>
             <div class="chart-container">
-                <canvas id="battleChart"></canvas>
+                <div class="chart-scroll-area" id="scrollArea">
+                    <canvas id="battleChart"></canvas>
+                </div>
             </div>
             <div id="customHover"></div>
         </div>
@@ -188,30 +193,45 @@
     });
 
     let battleChart;
+    let yAxisChart;
 
     function renderChart(playerName) {
         const playerData = dataObj[playerName];
         if (!playerData) return;
 
-        const total = playerData.x.length;
-        const start = Math.max(0, total - 20); // последние 20 боёв
+        const totalPoints = playerData.x.length;
+        const minWidthPerPoint = 50;
+        const calculatedWidth = totalPoints * minWidthPerPoint;
+        
+        const scrollArea = document.getElementById('scrollArea');
+        const containerWidth = document.querySelector('.chart-container').clientWidth;
+        scrollArea.style.width = Math.max(calculatedWidth, containerWidth) + 'px';
 
         const chartData = {
-            labels: playerData.x.slice(start),
+            labels: playerData.x,
             datasets: [{
                 label: 'Трофеи',
-                data: playerData.y.slice(start),
-                backgroundColor: playerData.custom.slice(start).map(c => c.change > 0 ? '#28a745' : '#dc3545'),
+                data: playerData.y,
+                backgroundColor: playerData.custom.map(c => c.change > 0 ? '#28a745' : '#dc3545'),
                 borderColor: '#667eea',
                 borderWidth: 2,
                 pointRadius: 6,
                 pointHoverRadius: 8,
-                pointBackgroundColor: playerData.custom.slice(start).map(c => c.change > 0 ? '#28a745' : '#dc3545'),
-                custom: playerData.custom.slice(start)
+                pointBackgroundColor: playerData.custom.map(c => c.change > 0 ? '#28a745' : '#dc3545'),
+                custom: playerData.custom
             }]
         };
 
+        const yAxisConfig = {
+            title: {display: true, text: 'Трофеи'}, 
+            beginAtZero: false,
+            afterFit: function(scale) {
+                scale.width = 70;
+            }
+        };
+
         if (battleChart instanceof Chart) battleChart.destroy();
+        if (yAxisChart instanceof Chart) yAxisChart.destroy();
 
         battleChart = new Chart(ctx, {
             type: 'line',
@@ -235,11 +255,11 @@
                                 return;
                             }
 
-                            const canvasRect = ctx.canvas.getBoundingClientRect();
                             hoverDiv.innerHTML = buildTooltipHTML(pointData);
 
                             // Position tooltip
-                            const tooltipX = point.element.x + 15;
+                            const scrollLeft = document.querySelector('.chart-container').scrollLeft;
+                            const tooltipX = point.element.x - scrollLeft + 15;
                             const tooltipY = point.element.y - 10;
 
                             hoverDiv.style.left = tooltipX + 'px';
@@ -249,11 +269,56 @@
                     }
                 },
                 scales: {
-                    x: {title: {display: true, text: 'Номер боя'}},
-                    y: {title: {display: true, text: 'Трофеи'}, beginAtZero: false}
+                    x: {
+                        ticks: {
+                            display: false
+                        }
+                    },
+                    y: yAxisConfig
                 }
             }
         });
+
+        const ctxY = document.getElementById('yAxisChart').getContext('2d');
+        const yChartData = {
+            labels: playerData.x,
+            datasets: [{
+                data: playerData.y,
+                borderColor: 'transparent',
+                backgroundColor: 'transparent',
+                pointRadius: 0,
+                pointHoverRadius: 0,
+                borderWidth: 0
+            }]
+        };
+
+        yAxisChart = new Chart(ctxY, {
+            type: 'line',
+            data: yChartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                plugins: {
+                    legend: {display: false},
+                    tooltip: {enabled: false}
+                },
+                scales: {
+                    x: {
+                        ticks: { display: false },
+                        grid: { display: false, drawBorder: false },
+                        border: { display: false }
+                    },
+                    y: yAxisConfig
+                }
+            }
+        });
+
+        // Прокрутка в самый конец после рендера, чтобы видеть последние бои
+        setTimeout(() => {
+            const container = document.querySelector('.chart-container');
+            container.scrollLeft = container.scrollWidth;
+        }, 10);
     }
 
     // Запуск графика для игрока по умолчанию

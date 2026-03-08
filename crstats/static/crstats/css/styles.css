@@ -120,15 +120,34 @@ body {
 .chart-wrapper {
     position: relative;
     width: 100%;
+    min-width: 0;
+}
+
+.y-axis-container {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 70px;
+    height: 100%;
+    z-index: 10;
+    background: white;
+    pointer-events: none;
 }
 
 .chart-container {
     position: relative;
     height: 500px;
     width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
 }
 
-#battleChart {
+.chart-scroll-area {
+    position: relative;
+    height: 100%;
+}
+
+#battleChart, #yAxisChart {
     width: 100% !important;
     height: 100% !important;
 }
