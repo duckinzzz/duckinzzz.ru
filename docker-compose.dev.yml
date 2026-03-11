@@ -33,7 +33,9 @@ services:
       - .:/app
     networks:
       - duckinzzz_net
-    command: celery -A config worker -B --loglevel=info --concurrency=2
+    command: celery -A config worker --loglevel=info --concurrency=2
+    # for battles update
+    # command: celery -A config worker -B --loglevel=info --concurrency=2
 
   redis:
     image: redis:alpine

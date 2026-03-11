@@ -23,7 +23,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
 
     'frontend',
-    'crstats'
+    'crstats',
+    'killanews',
 ]
 
 MIDDLEWARE = [
