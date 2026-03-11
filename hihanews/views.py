@@ -6,7 +6,7 @@ from django.http import FileResponse, Http404
 from django.shortcuts import render
 
 
-NEWS_TEMPLATE_ROOT = Path(settings.BASE_DIR) / 'killanews' / 'templates' / 'killanews' / 'news'
+NEWS_TEMPLATE_ROOT = Path(settings.BASE_DIR) / 'hihanews' / 'templates' / 'hihanews' / 'news'
 ALLOWED_ASSET_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.webp', '.gif', '.svg', '.avif'}
 
 
@@ -19,11 +19,11 @@ def news_index(request):
         ],
         reverse=True,
     )
-    return render(request, 'killanews/news/index.html', {'news_items': news_items})
+    return render(request, 'hihanews/news/index.html', {'news_items': news_items})
 
 
 def news_detail(request, news_slug):
-    template_name = f'killanews/news/{news_slug}/index.html'
+    template_name = f'hihanews/news/{news_slug}/index.html'
     try:
         return render(request, template_name, {'news_slug': news_slug})
     except TemplateDoesNotExist as exc:

@@ -1,9 +1,9 @@
-{% extends "killanews/news/base.html" %}
+{% extends "hihanews/news/base.html" %}
 {% block title %}В городе состоялось необычное награждение сотрудника года{% endblock %}
 {% block og_title %}Мотя Матумбович получил награду «Сотрудник года»{% endblock %}
 {% block og_description %}Награждение прошло в филиале «Вкусно - и точка», где отметили заслуги программиста в области 1С{% endblock %}
-{% block og_image_tag %}<meta property="og:image" content="{% url 'killanews:news_asset' news_slug=news_slug asset_path='mattew.jpg' %}"/>{% endblock %}
-{% block og_url %}{% url 'killanews:news_detail' news_slug=news_slug %}{% endblock %}
+{% block og_image_tag %}<meta property="og:image" content="{% url 'hihanews:news_asset' news_slug=news_slug asset_path='mattew.jpg' %}"/>{% endblock %}
+{% block og_url %}{% url 'hihanews:news_detail' news_slug=news_slug %}{% endblock %}
 {% block header_date %}11 марта 2026{% endblock %}
 {% block category %}Общество{% endblock %}
 {% block headline %}Мотя Матумбович удостоен почетной награды «Сотрудник года» за заслуги в программировании 1С{% endblock %}
@@ -13,7 +13,7 @@
 {% block hero %}
     <figure class="hero">
         <div class="hero-inner">
-            <img class="hero-media" src="{% url 'killanews:news_asset' news_slug=news_slug asset_path='mattew.jpg' %}" alt="Мотя Матумбович с почетной грамотой Сотрудник года"/>
+            <img class="hero-media" src="{% url 'hihanews:news_asset' news_slug=news_slug asset_path='mattew.jpg' %}" alt="Мотя Матумбович с почетной грамотой Сотрудник года"/>
             <div class="hero-caption">Мотя Матумбович с почетной грамотой «Сотрудник года»</div>
         </div>
     </figure>

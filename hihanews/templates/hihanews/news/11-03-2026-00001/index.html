@@ -1,9 +1,9 @@
-{% extends "killanews/news/base.html" %}
+{% extends "hihanews/news/base.html" %}
 {% block title %}В городе выясняют обстоятельства необычного происшествия на мосту{% endblock %}
 {% block og_title %}С Русского моста упал бегемот{% endblock %}
 {% block og_description %}В городе выясняют обстоятельства необычного происшествия на мосту{% endblock %}
-{% block og_image_tag %}<meta property="og:image" content="{% url 'killanews:news_asset' news_slug=news_slug asset_path='bridge.jpg' %}"/>{% endblock %}
-{% block og_url %}{% url 'killanews:news_detail' news_slug=news_slug %}{% endblock %}
+{% block og_image_tag %}<meta property="og:image" content="{% url 'hihanews:news_asset' news_slug=news_slug asset_path='bridge.jpg' %}"/>{% endblock %}
+{% block og_url %}{% url 'hihanews:news_detail' news_slug=news_slug %}{% endblock %}
 {% block header_date %}11 марта 2026{% endblock %}
 {% block category %}Происшествия{% endblock %}
 {% block headline %}Около 12:30 очевидцы сообщили о падении бегемота с моста{% endblock %}
@@ -13,7 +13,7 @@
 {% block hero %}
     <figure class="hero">
         <div class="hero-inner">
-            <img class="hero-media" src="{% url 'killanews:news_asset' news_slug=news_slug asset_path='bridge.jpg' %}" alt="Мост Русский, на котором произошла трагедия"/>
+            <img class="hero-media" src="{% url 'hihanews:news_asset' news_slug=news_slug asset_path='bridge.jpg' %}" alt="Мост Русский, на котором произошла трагедия"/>
             <div class="hero-caption">Мост Русский, на котором произошла трагедия</div>
         </div>
     </figure>

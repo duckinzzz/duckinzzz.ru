@@ -43,7 +43,6 @@ body {
     font-size: 28px;
     color: var(--accent);
     letter-spacing: 0.5px;
-    text-transform: uppercase;
 }
 
 main {

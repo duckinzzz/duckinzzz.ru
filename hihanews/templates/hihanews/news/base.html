@@ -5,7 +5,7 @@
     <meta charset="UTF-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>{% block title %}{% endblock %}</title>
-    <link rel="icon" href="{% static 'killanews/favicon.png' %}"/>
+    <link rel="icon" href="{% static 'hihanews/favicon.png' %}"/>
     {% block favicon %}{% endblock %}
 
     <meta property="og:type" content="article"/>
@@ -15,12 +15,12 @@
     <meta property="og:url" content="{% block og_url %}{% endblock %}"/>
     <meta name="twitter:card" content="summary_large_image"/>
 
-    <link rel="stylesheet" href="{% static 'killanews/news.css' %}"/>
+    <link rel="stylesheet" href="{% static 'hihanews/news.css' %}"/>
 </head>
 <body>
 <header class="topbar">
     <div class="topbar-inner">
-        <div class="brand">KillaNews</div>
+        <div class="brand">hihaNEWS</div>
         <div>{% block header_date %}{% endblock %}</div>
     </div>
 </header>
@@ -43,7 +43,7 @@
     </article>
 
     <div class="footer">
-        {% block footer %}Материал оформлен новостным агентством KillaNews.{% endblock %}
+        {% block footer %}Материал оформлен новостным агентством HihaNews.{% endblock %}
     </div>
 </main>
 </body>

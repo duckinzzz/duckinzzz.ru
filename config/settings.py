@@ -24,7 +24,7 @@ INSTALLED_APPS = [
 
     'frontend',
     'crstats',
-    'killanews',
+    'hihanews',
 ]
 
 MIDDLEWARE = [
