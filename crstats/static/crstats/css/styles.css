@@ -98,6 +98,7 @@ body {
     width: 12px;
     height: 12px;
     border-radius: 50%;
+    flex-shrink: 0;
 }
 
 .legend-dot.win {
@@ -275,6 +276,17 @@ body {
     line-height: 1;
     opacity: 0;
     transition: opacity 0.1s;
+}
+
+#customHover .tower-level {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 19px;
+    height: 19px;
+    background: rgb(65, 175, 255);
+    color: #ffffff;
+    border-radius: 50%;
 }
 
 #customHover .card-wrapper.loaded .card-level {
