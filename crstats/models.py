@@ -4,7 +4,11 @@ from django.db import models
 class BattleLog(models.Model):
     battle_time = models.DateTimeField(db_index=True)
     player_tag = models.CharField(max_length=255, db_index=True)
+    player_exp_lvl = models.IntegerField()
+    player_tower = models.IntegerField()
     enemy_tag = models.CharField(max_length=255)
+    enemy_tower = models.IntegerField()
+    enemy_exp_lvl = models.IntegerField()
     starting_trophies = models.IntegerField()
     trophy_change = models.IntegerField()
     raw_data = models.JSONField()

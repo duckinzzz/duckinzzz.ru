@@ -92,6 +92,8 @@ def index(request):
                     'battle_time': log.battle_time.isoformat(),
                     'change': log.trophy_change,
                     'enemy': log.enemy_tag,
+                    'player_tower': log.player_tower,
+                    'enemy_tower': log.enemy_tower,
                     'battle_info': battle_info_from_raw(log.raw_data)
                 }
                 for log in logs_list

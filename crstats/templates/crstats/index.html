@@ -122,6 +122,9 @@
         const playerCrowns = info.player.crowns || 0;
         const enemyCrowns = info.enemy.crowns || 0;
 
+        const playerTower = pointData.player_tower || 0;
+        const enemyTower = pointData.enemy_tower || 0;
+
         // Calculate average levels
         const playerAvgLevel = (info.player.cards.reduce((sum, c) => sum + c.level, 0) / info.player.cards.length).toFixed(1);
         const enemyAvgLevel = (info.enemy.cards.reduce((sum, c) => sum + c.level, 0) / info.enemy.cards.length).toFixed(1);
@@ -164,6 +167,7 @@
                 <div class="deck-stats">
                     <div class="stat-item">avg lvl: ${playerAvgLevel}</div>
                     <div class="stat-item">avg cost: ${playerAvgCost}</div>
+                    <div class="stat-item">twr lvl: ${playerTower}</div>
                 </div>
             </div>
             <div class="score-divider">
@@ -177,6 +181,7 @@
                 <div class="deck-stats">
                     <div class="stat-item">avg lvl: ${enemyAvgLevel}</div>
                     <div class="stat-item">avg cost: ${enemyAvgCost}</div>
+                    <div class="stat-item">twr lvl: ${enemyTower}</div>
                 </div>
             </div>
         </div>
