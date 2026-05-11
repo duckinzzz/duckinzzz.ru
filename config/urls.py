@@ -8,4 +8,5 @@ urlpatterns = [
     path('', include('frontend.urls')),
     path('', include('crstats.urls')),
     path('', include('hihanews.urls')),
+    path('', include('botstats.urls')),
 ]
