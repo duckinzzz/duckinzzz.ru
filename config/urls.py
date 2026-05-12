@@ -7,6 +7,5 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('frontend.urls')),
     path('', include('crstats.urls')),
-    path('', include('hihanews.urls')),
     path('', include('botstats.urls')),
 ]

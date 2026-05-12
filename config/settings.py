@@ -26,7 +26,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'frontend',
     'crstats',
-    'hihanews',
     'botstats',
 ]
 
@@ -138,6 +137,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 USE_X_FORWARDED_HOST = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://duckinzzz.ru',
+    'https://www.duckinzzz.ru',
+]
 
 if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True

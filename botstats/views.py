@@ -1,11 +1,22 @@
+from functools import wraps
+
 from django.conf import settings
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
 from .models import BotData
 from .serializers import BotDataSerializer
+
+
+def login_required_page(view):
+    @wraps(view)
+    def wrapper(request, *args, **kwargs):
+        if not request.session.get('botstats_authed'):
+            return redirect('botstats:login')
+        return view(request, *args, **kwargs)
+    return wrapper
 
 
 class BotDataListCreate(APIView):
@@ -30,6 +41,23 @@ class BotDataListCreate(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+def login_view(request):
+    error = None
+    if request.method == 'POST':
+        if request.POST.get('password') == settings.BOTSTATS_API_TOKEN:
+            request.session['botstats_authed'] = True
+            return redirect('botstats:index')
+        error = 'Wrong password'
+
+    return render(request, 'botstats/login.html', {'error': error})
+
+
+def logout_view(request):
+    request.session.pop('botstats_authed', None)
+    return redirect('botstats:login')
+
+
+@login_required_page
 def botstats_page(request):
     bot_name_filter = request.GET.get('bot_name', '')
     entries = BotData.objects.all()
