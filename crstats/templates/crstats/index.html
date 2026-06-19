@@ -5,54 +5,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Clech Royale Stats</title>
+    <title>Clash Royale Stats</title>
     <link rel="icon" type="image/png" href="{% static 'crstats/images/favicon.png' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap">
     <link rel="stylesheet" href="{% static 'crstats/css/styles.css' %}">
 
-    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
-<div class="container">
-    <div class="header">
-        <h1>🏆 Clech Royale Stats</h1>
-        <p>Отслеживание трофеев по боям</p>
-    </div>
+<div class="page">
+    <header class="masthead">
+        <div class="masthead-row">
+            <span class="eyebrow">Clech Stats</span>
+            <span class="eyebrow muted">Auto-refresh 90s</span>
+        </div>
+        <h1>ХИХИ ХАХА<br><em>Clan statistics.</em></h1>
+        <p class="dek">Хронология побед и поражений по каждому отслеживаемому игроку. Наведите курсор на точку графика, чтобы увидеть состав колод и счёт боя.</p>
+    </header>
 
-    <div class="controls">
+    <section class="controls">
         <div class="control-group">
-            <label for="playerSelect">Выберите игрока:</label>
+            <label for="playerSelect">Игрок</label>
             <select id="playerSelect"></select>
         </div>
-    </div>
-
-    <div class="legend">
-        <div class="legend-item">
-            <div class="legend-dot win"></div>
-            <span>Победа (+трофеи)</span>
-        </div>
-        <div class="legend-item">
-            <div class="legend-dot loss"></div>
-            <span>Поражение (-трофеи)</span>
-        </div>
-    </div>
-
-    <div class="main-content">
-        <div class="chart-wrapper">
-            <div class="y-axis-container">
-                <canvas id="yAxisChart"></canvas>
+        <div class="legend">
+            <div class="legend-item">
+                <span class="legend-dot win"></span>
+                <span>Победа</span>
             </div>
-            <div class="chart-container">
-                <div class="chart-scroll-area" id="scrollArea">
-                    <canvas id="battleChart"></canvas>
+            <div class="legend-item">
+                <span class="legend-dot loss"></span>
+                <span>Поражение</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="main-content">
+        <div class="card chart-card">
+            <div class="card-head">
+                <span class="card-label">График</span>
+                <span class="card-meta">Трофеи / время</span>
+            </div>
+            <div class="chart-wrapper">
+                <div class="y-axis-container">
+                    <canvas id="yAxisChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-scroll-area" id="scrollArea">
+                        <canvas id="battleChart"></canvas>
+                    </div>
                 </div>
             </div>
-            <div id="customHover"></div>
         </div>
 
-        <div class="last-battles">
-            <h3>🕒 Последние бои</h3>
+        <aside class="card last-battles">
+            <div class="card-head">
+                <span class="card-label">Последние бои</span>
+                <span class="card-meta">live</span>
+            </div>
             <ul>
                 {% for battle in last_battles %}
                     <li class="battle-row">
@@ -66,12 +79,14 @@
                     </li>
                 {% endfor %}
             </ul>
-        </div>
-    </div>
+        </aside>
+    </section>
 
-    <div class="stats-info">
-        Данные обновляются автоматически каждые 90 секунд
-    </div>
+    <div id="customHover" role="tooltip"></div>
+
+    <footer class="stats-info">
+        <span>Данные обновляются автоматически каждые 90 секунд</span>
+    </footer>
 </div>
 
 <script>
@@ -118,11 +133,9 @@
         if (!pointData || !pointData.battle_info) return `<div>Нет данных</div>`;
         const info = pointData.battle_info;
 
-        // Get scores (crowns)
         const playerCrowns = info.player.crowns || 0;
         const enemyCrowns = info.enemy.crowns || 0;
 
-        // Calculate average levels
         const playerAvgLevel = (info.player.cards.reduce((sum, c) => sum + c.level, 0) / info.player.cards.length).toFixed(1);
         const enemyAvgLevel = (info.enemy.cards.reduce((sum, c) => sum + c.level, 0) / info.enemy.cards.length).toFixed(1);
 
@@ -130,17 +143,14 @@
             const nonZeroCards = cards.filter(c => c.elixirCost !== 0);
             const zeroCard = cards.find(c => c.elixirCost === 0);
 
-            // Минимальная и максимальная стоимость среди остальных карт
             const minCost = Math.min(...nonZeroCards.map(c => c.elixirCost));
             const maxCost = Math.max(...nonZeroCards.map(c => c.elixirCost));
 
-            // Если есть карта с elixirCost = 0
             if (zeroCard) {
                 const avgMin = (nonZeroCards.reduce((sum, c) => sum + c.elixirCost, 0) + (minCost + 1)) / cards.length;
                 const avgMax = (nonZeroCards.reduce((sum, c) => sum + c.elixirCost, 0) + (maxCost + 1)) / cards.length;
                 return ((avgMin + avgMax) / 2).toFixed(1);
             } else {
-                // Просто обычный средний
                 const avg = cards.reduce((sum, c) => sum + (c.elixirCost || 0), 0) / cards.length;
                 return avg.toFixed(1);
             }
@@ -150,9 +160,9 @@
         const enemyAvgCost = calculateAdjustedAvg(info.enemy.cards);
         return `
         <div class="tooltip-header">
-            <div><strong>Противник:</strong> ${info.enemy.nickname}</div>
-            <div><strong>Результат:</strong> <span class="${pointData.change > 0 ? 'win' : 'loss'}">${pointData.change > 0 ? 'Победа' : 'Поражение'} (${pointData.change > 0 ? '+' : ''}${pointData.change})</span></div>
-            <div><strong>Время:</strong> ${formatLocalTime(pointData.battle_time)}</div>
+            <div><span class="th-key">Противник</span><span class="th-val">${info.enemy.nickname}</span></div>
+            <div><span class="th-key">Результат</span><span class="th-val ${pointData.change > 0 ? 'win' : 'loss'}">${pointData.change > 0 ? 'Победа' : 'Поражение'} (${pointData.change > 0 ? '+' : ''}${pointData.change})</span></div>
+            <div><span class="th-key">Время</span><span class="th-val">${formatLocalTime(pointData.battle_time)}</span></div>
         </div>
         <hr/>
         <div class="battle-layout">
@@ -162,12 +172,12 @@
                     ${buildCardsLayout(info.player.cards)}
                 </div>
                 <div class="deck-stats">
-                    <div class="stat-item">avg lvl: ${playerAvgLevel}</div>
-                    <div class="stat-item">avg cost: ${playerAvgCost}</div>
+                    <div class="stat-item">avg lvl <b>${playerAvgLevel}</b></div>
+                    <div class="stat-item">avg cost <b>${playerAvgCost}</b></div>
                 </div>
             </div>
             <div class="score-divider">
-                <div class="score">Счет ${playerCrowns}:${enemyCrowns}</div>
+                <div class="score">${playerCrowns}<span>:</span>${enemyCrowns}</div>
             </div>
             <div class="deck-column">
                 <div class="deck-label">Противник</div>
@@ -175,15 +185,14 @@
                     ${buildCardsLayout(info.enemy.cards)}
                 </div>
                 <div class="deck-stats">
-                    <div class="stat-item">avg lvl: ${enemyAvgLevel}</div>
-                    <div class="stat-item">avg cost: ${enemyAvgCost}</div>
+                    <div class="stat-item">avg lvl <b>${enemyAvgLevel}</b></div>
+                    <div class="stat-item">avg cost <b>${enemyAvgCost}</b></div>
                 </div>
             </div>
         </div>
     `;
     }
 
-    // Заполняем select игроками
     Object.keys(dataObj).forEach(player => {
         const option = document.createElement('option');
         option.value = player;
@@ -194,6 +203,51 @@
 
     let battleChart;
     let yAxisChart;
+    let activeHoverKey = null;
+
+    function positionHover(pointCanvasX, pointCanvasY) {
+        const canvas = document.getElementById('battleChart');
+        const canvasRect = canvas.getBoundingClientRect();
+        const chartContainer = document.querySelector('.chart-container');
+        const containerRect = chartContainer.getBoundingClientRect();
+
+        // Point center in viewport coordinates
+        const pointVX = canvasRect.left + pointCanvasX;
+        const pointVY = canvasRect.top + pointCanvasY;
+
+        // If the point is outside the visible scroll area, hide tooltip
+        if (pointVX < containerRect.left - 1 || pointVX > containerRect.right + 1) {
+            hoverDiv.style.display = 'none';
+            return;
+        }
+
+        // Reveal before measuring so we get real dimensions
+        hoverDiv.style.visibility = 'hidden';
+        hoverDiv.style.display = 'block';
+        const tipW = hoverDiv.offsetWidth;
+        const tipH = hoverDiv.offsetHeight;
+
+        const margin = 12;
+        const gap = 16;
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        // Prefer right of point; flip left if no room
+        let left = pointVX + gap;
+        if (left + tipW > vw - margin) {
+            left = pointVX - gap - tipW;
+        }
+        // Clamp if still off-screen
+        left = Math.max(margin, Math.min(left, vw - tipW - margin));
+
+        // Vertically center on point, clamp to viewport
+        let top = pointVY - tipH / 2;
+        top = Math.max(margin, Math.min(top, vh - tipH - margin));
+
+        hoverDiv.style.left = left + 'px';
+        hoverDiv.style.top = top + 'px';
+        hoverDiv.style.visibility = 'visible';
+    }
 
     function renderChart(playerName) {
         const playerData = dataObj[playerName];
@@ -202,31 +256,44 @@
         const totalPoints = playerData.x.length;
         const minWidthPerPoint = 50;
         const calculatedWidth = totalPoints * minWidthPerPoint;
-        
+
         const scrollArea = document.getElementById('scrollArea');
         const containerWidth = document.querySelector('.chart-container').clientWidth;
         scrollArea.style.width = Math.max(calculatedWidth, containerWidth) + 'px';
+
+        const WIN = '#346538';
+        const LOSS = '#9F2F2D';
+        const LINE = '#111111';
 
         const chartData = {
             labels: playerData.x,
             datasets: [{
                 label: 'Трофеи',
                 data: playerData.y,
-                backgroundColor: playerData.custom.map(c => c.change > 0 ? '#28a745' : '#dc3545'),
-                borderColor: '#667eea',
-                borderWidth: 2,
-                pointRadius: 6,
-                pointHoverRadius: 8,
-                pointBackgroundColor: playerData.custom.map(c => c.change > 0 ? '#28a745' : '#dc3545'),
+                backgroundColor: playerData.custom.map(c => c.change > 0 ? WIN : LOSS),
+                borderColor: LINE,
+                borderWidth: 1.25,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: playerData.custom.map(c => c.change > 0 ? WIN : LOSS),
+                pointBorderColor: '#FFFFFF',
+                pointBorderWidth: 1.5,
+                tension: 0,
                 custom: playerData.custom
             }]
         };
 
         const yAxisConfig = {
-            title: {display: true, text: 'Трофеи'}, 
+            title: {display: false},
             beginAtZero: false,
+            grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+            border: { display: false },
+            ticks: {
+                color: '#787774',
+                font: { family: "'Geist Mono', monospace", size: 11 }
+            },
             afterFit: function(scale) {
-                scale.width = 70;
+                scale.width = 56;
             }
         };
 
@@ -247,32 +314,30 @@
                             const point = context.tooltip.dataPoints?.[0];
                             if (!point || !point.dataset?.custom) {
                                 hoverDiv.style.display = 'none';
+                                activeHoverKey = null;
                                 return;
                             }
                             const pointData = point.dataset.custom[point.dataIndex];
                             if (!pointData) {
                                 hoverDiv.style.display = 'none';
+                                activeHoverKey = null;
                                 return;
                             }
 
-                            hoverDiv.innerHTML = buildTooltipHTML(pointData);
-
-                            // Position tooltip
-                            const scrollLeft = document.querySelector('.chart-container').scrollLeft;
-                            const tooltipX = point.element.x - scrollLeft + 15;
-                            const tooltipY = point.element.y - 10;
-
-                            hoverDiv.style.left = tooltipX + 'px';
-                            hoverDiv.style.top = tooltipY + 'px';
-                            hoverDiv.style.display = 'block';
+                            const hoverKey = `${select.value}|${point.dataIndex}`;
+                            if (hoverKey !== activeHoverKey) {
+                                hoverDiv.innerHTML = buildTooltipHTML(pointData);
+                                activeHoverKey = hoverKey;
+                            }
+                            positionHover(point.element.x, point.element.y);
                         }
                     }
                 },
                 scales: {
                     x: {
-                        ticks: {
-                            display: false
-                        }
+                        ticks: { display: false },
+                        grid: { color: 'rgba(0,0,0,0.04)', drawBorder: false },
+                        border: { display: false }
                     },
                     y: yAxisConfig
                 }
@@ -314,21 +379,34 @@
             }
         });
 
-        // Прокрутка в самый конец после рендера, чтобы видеть последние бои
         setTimeout(() => {
             const container = document.querySelector('.chart-container');
             container.scrollLeft = container.scrollWidth;
         }, 10);
     }
 
-    // Запуск графика для игрока по умолчанию
     renderChart(defaultPlayer);
-    select.addEventListener('change', e => renderChart(e.target.value));
+    select.addEventListener('change', e => { hideHover(); renderChart(e.target.value); });
 
-    // Hide tooltip when mouse leaves chart
-    ctx.canvas.addEventListener('mouseleave', () => {
+    function hideHover() {
         hoverDiv.style.display = 'none';
-    });
+        activeHoverKey = null;
+    }
+
+    ctx.canvas.addEventListener('mouseleave', hideHover);
+    document.querySelector('.chart-container').addEventListener('scroll', hideHover, { passive: true });
+    window.addEventListener('resize', hideHover);
+
+    // Scroll entry fade-ins
+    const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                e.target.classList.add('in');
+                io.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.08 });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 </script>
 </body>
 </html>
