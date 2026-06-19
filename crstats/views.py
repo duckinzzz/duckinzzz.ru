@@ -1,5 +1,9 @@
+import json
+
+from django.http import JsonResponse, Http404
 from django.shortcuts import render
 from django.utils import timezone
+from django.utils.safestring import mark_safe
 
 from .models import BattleLog
 
@@ -13,6 +17,8 @@ PLAYERS = {
     "#22009JPCCQ": "flamboyx",
 }
 
+NAME_TO_TAG = {name: tag for tag, name in PLAYERS.items()}
+
 base_lvl = {
     'common': 1,
     'rare': 3,
@@ -22,6 +28,7 @@ base_lvl = {
 }
 
 CHART_BATTLES_PER_PLAYER = 30
+DEFAULT_PLAYER = "Шапа Шуточкин"
 
 
 def russian_plural(n, forms):
@@ -52,56 +59,59 @@ def humanize_time(delta):
         return f"{days} {russian_plural(days, ['день', 'дня', 'дней'])} назад"
 
 
-def battle_info_from_raw(raw):
-    def format_cards(cards):
-        return [
-            {
+def build_player_payload(tag, catalog):
+    """Build a player's chart payload and merge any new cards into `catalog`.
+
+    Cards inside `battle_info` are stored as light refs: {id, level, isEvo}.
+    The shared `catalog` maps id -> {name, rarity, elixirCost, iconUrls}.
+    """
+    latest_logs = BattleLog.objects.filter(player_tag=tag).order_by('-battle_time')[:CHART_BATTLES_PER_PLAYER]
+    logs_list = list(reversed(latest_logs))
+
+    def card_ref(card):
+        cid = card['id']
+        if cid not in catalog:
+            catalog[cid] = {
                 'name': card['name'],
-                'level': card['level'] + base_lvl[card['rarity']] - 1,
                 'rarity': card['rarity'],
                 'elixirCost': card.get('elixirCost', 0),
                 'iconUrls': card['iconUrls'],
-                'isEvo': 'True' if card.get('evolutionLevel') else 'False'
             }
-            for card in cards
-        ]
+        return {
+            'id': cid,
+            'level': card['level'] + base_lvl[card['rarity']] - 1,
+            'isEvo': bool(card.get('evolutionLevel')),
+        }
 
-    p, e = raw['team'][0], raw['opponent'][0]
+    def battle_info(raw):
+        p, e = raw['team'][0], raw['opponent'][0]
+        return {
+            'player': {'crowns': p['crowns'], 'cards': [card_ref(c) for c in p['cards']]},
+            'enemy': {'nickname': e['name'], 'crowns': e['crowns'], 'cards': [card_ref(c) for c in e['cards']]},
+        }
 
     return {
-        'player': {'crowns': p['crowns'], 'cards': format_cards(p['cards'])},
-        'enemy': {'nickname': e['name'], 'crowns': e['crowns'], 'cards': format_cards(e['cards'])}
+        'x': list(range(1, len(logs_list) + 1)),
+        'y': [log.starting_trophies + log.trophy_change for log in logs_list],
+        'custom': [
+            {
+                'battle_time': log.battle_time.isoformat(),
+                'change': log.trophy_change,
+                'enemy': log.enemy_tag,
+                'battle_info': battle_info(log.raw_data),
+            }
+            for log in logs_list
+        ],
     }
 
 
 def index(request):
-    data = {}
-
-    for tag, name in PLAYERS.items():
-        latest_logs = BattleLog.objects.filter(
-            player_tag=tag,
-        ).order_by('-battle_time')[:CHART_BATTLES_PER_PLAYER]
-
-        logs_list = list(reversed(latest_logs))
-
-        data[name] = {
-            'x': list(range(1, len(logs_list) + 1)),
-            'y': [log.starting_trophies + log.trophy_change for log in logs_list],
-            'custom': [
-                {
-                    'battle_time': log.battle_time.isoformat(),
-                    'change': log.trophy_change,
-                    'enemy': log.enemy_tag,
-                    'battle_info': battle_info_from_raw(log.raw_data)
-                }
-                for log in logs_list
-            ]
-        }
+    catalog = {}
+    default_tag = NAME_TO_TAG.get(DEFAULT_PLAYER)
+    initial_data = {DEFAULT_PLAYER: build_player_payload(default_tag, catalog)}
 
     now = timezone.now()
-
     last_battles = BattleLog.objects.order_by('-battle_time')[:10]
-
     last_battles_data = [
         {
             "player": PLAYERS.get(log.player_tag, log.player_tag),
@@ -111,12 +121,27 @@ def index(request):
         }
         for log in last_battles
     ]
+
+    def js(value):
+        return mark_safe(json.dumps(value, ensure_ascii=False).replace('</', '<\\/'))
+
     return render(
         request,
         "crstats/index.html",
         {
-            "data": data,
-            "default_player": "Шапа Шуточкин",
+            "data_json": js(initial_data),
+            "cards_catalog_json": js(catalog),
+            "players_json": js(list(PLAYERS.values())),
+            "default_player": DEFAULT_PLAYER,
             "last_battles": last_battles_data,
         }
     )
+
+
+def player_data(request, name):
+    tag = NAME_TO_TAG.get(name)
+    if not tag:
+        raise Http404("unknown player")
+    catalog = {}
+    payload = build_player_payload(tag, catalog)
+    return JsonResponse({"player": payload, "catalog": catalog})

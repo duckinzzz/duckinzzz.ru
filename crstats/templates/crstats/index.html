@@ -93,7 +93,9 @@
     const ctx = document.getElementById('battleChart').getContext('2d');
     const hoverDiv = document.getElementById('customHover');
     const select = document.getElementById('playerSelect');
-    const dataObj = {{ data|safe }};
+    const dataObj = {{ data_json }};
+    const cardsCatalog = {{ cards_catalog_json }};
+    const playersList = {{ players_json }};
     const defaultPlayer = "{{ default_player }}";
 
     function formatLocalTime(isoString) {
@@ -117,16 +119,23 @@
 
     function buildCardsLayout(cards) {
         return cards.map(c => {
-            const iconUrl = (c.isEvo === 'True' && c.iconUrls.evolutionMedium)
-                ? c.iconUrls.evolutionMedium
-                : c.iconUrls.medium;
+            const meta = cardsCatalog[c.id] || {};
+            const iconUrls = meta.iconUrls || {};
+            const isEvo = c.isEvo === true || c.isEvo === 'True';
+            const iconUrl = (isEvo && iconUrls.evolutionMedium) ? iconUrls.evolutionMedium : iconUrls.medium;
+            const name = meta.name || '';
             return `
                 <div class="card-wrapper">
-                    <img src="${iconUrl}" alt="${c.name}" title="${c.name}" onload="this.parentElement.classList.add('loaded')" />
+                    <img src="${iconUrl}" alt="${name}" title="${name}" onload="this.parentElement.classList.add('loaded')" />
                     <span class="card-level">${c.level}</span>
                 </div>
             `;
         }).join('');
+    }
+
+    function cardElixir(c) {
+        const meta = cardsCatalog[c.id] || {};
+        return meta.elixirCost || 0;
     }
 
     function buildTooltipHTML(pointData) {
@@ -140,20 +149,19 @@
         const enemyAvgLevel = (info.enemy.cards.reduce((sum, c) => sum + c.level, 0) / info.enemy.cards.length).toFixed(1);
 
         function calculateAdjustedAvg(cards) {
-            const nonZeroCards = cards.filter(c => c.elixirCost !== 0);
-            const zeroCard = cards.find(c => c.elixirCost === 0);
+            const costs = cards.map(cardElixir);
+            const nonZero = costs.filter(v => v !== 0);
+            const hasZero = costs.some(v => v === 0);
 
-            const minCost = Math.min(...nonZeroCards.map(c => c.elixirCost));
-            const maxCost = Math.max(...nonZeroCards.map(c => c.elixirCost));
-
-            if (zeroCard) {
-                const avgMin = (nonZeroCards.reduce((sum, c) => sum + c.elixirCost, 0) + (minCost + 1)) / cards.length;
-                const avgMax = (nonZeroCards.reduce((sum, c) => sum + c.elixirCost, 0) + (maxCost + 1)) / cards.length;
+            if (hasZero && nonZero.length) {
+                const minCost = Math.min(...nonZero);
+                const maxCost = Math.max(...nonZero);
+                const sumNonZero = nonZero.reduce((s, v) => s + v, 0);
+                const avgMin = (sumNonZero + (minCost + 1)) / cards.length;
+                const avgMax = (sumNonZero + (maxCost + 1)) / cards.length;
                 return ((avgMin + avgMax) / 2).toFixed(1);
-            } else {
-                const avg = cards.reduce((sum, c) => sum + (c.elixirCost || 0), 0) / cards.length;
-                return avg.toFixed(1);
             }
+            return (costs.reduce((s, v) => s + v, 0) / cards.length).toFixed(1);
         }
 
         const playerAvgCost = calculateAdjustedAvg(info.player.cards);
@@ -193,13 +201,31 @@
     `;
     }
 
-    Object.keys(dataObj).forEach(player => {
+    playersList.forEach(player => {
         const option = document.createElement('option');
         option.value = player;
         option.textContent = player;
         if (player === defaultPlayer) option.selected = true;
         select.appendChild(option);
     });
+
+    const inflight = {};
+    async function ensurePlayerData(name) {
+        if (dataObj[name]) return dataObj[name];
+        if (inflight[name]) return inflight[name];
+        inflight[name] = fetch(`api/player/${encodeURIComponent(name)}/`)
+            .then(r => {
+                if (!r.ok) throw new Error('fetch failed');
+                return r.json();
+            })
+            .then(payload => {
+                Object.assign(cardsCatalog, payload.catalog || {});
+                dataObj[name] = payload.player;
+                return dataObj[name];
+            })
+            .finally(() => { delete inflight[name]; });
+        return inflight[name];
+    }
 
     let battleChart;
     let yAxisChart;
@@ -385,8 +411,21 @@
         }, 10);
     }
 
+    async function loadPlayer(name) {
+        hideHover();
+        select.disabled = true;
+        try {
+            await ensurePlayerData(name);
+            renderChart(name);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            select.disabled = false;
+        }
+    }
+
     renderChart(defaultPlayer);
-    select.addEventListener('change', e => { hideHover(); renderChart(e.target.value); });
+    select.addEventListener('change', e => loadPlayer(e.target.value));
 
     function hideHover() {
         hoverDiv.style.display = 'none';
