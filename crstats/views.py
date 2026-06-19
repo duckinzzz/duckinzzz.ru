@@ -21,6 +21,8 @@ base_lvl = {
     'champion': 11,
 }
 
+CHART_BATTLES_PER_PLAYER = 30
+
 
 def russian_plural(n, forms):
     n = abs(n) % 100
@@ -75,14 +77,12 @@ def battle_info_from_raw(raw):
 def index(request):
     data = {}
 
-    MAX_BATTLES_PER_PLAYER = 1000
-
     for tag, name in PLAYERS.items():
-        logs = BattleLog.objects.filter(
+        latest_logs = BattleLog.objects.filter(
             player_tag=tag,
-        ).order_by('battle_time')[:MAX_BATTLES_PER_PLAYER]
+        ).order_by('-battle_time')[:CHART_BATTLES_PER_PLAYER]
 
-        logs_list = list(logs)
+        logs_list = list(reversed(latest_logs))
 
         data[name] = {
             'x': list(range(1, len(logs_list) + 1)),
@@ -92,8 +92,6 @@ def index(request):
                     'battle_time': log.battle_time.isoformat(),
                     'change': log.trophy_change,
                     'enemy': log.enemy_tag,
-                    'player_tower': log.player_tower,
-                    'enemy_tower': log.enemy_tower,
                     'battle_info': battle_info_from_raw(log.raw_data)
                 }
                 for log in logs_list
