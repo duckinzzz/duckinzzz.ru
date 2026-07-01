@@ -6,18 +6,7 @@ from django.utils import timezone
 from django.utils.safestring import mark_safe
 
 from .models import BattleLog
-
-PLAYERS = {
-    "#UY2VY9YUG": "grandison",
-    "#Q8899QUY": "(-РашеР-)",
-    "#289U8CQR2": "duckinzzz",
-    "#VG9CR9R2J": "Шапа Шуточкин",
-    "#20QP9JGGRQ": "клечик нямочкин",
-    "#RLJVGUJL": "Lucky",
-    "#22009JPCCQ": "flamboyx",
-}
-
-NAME_TO_TAG = {name: tag for tag, name in PLAYERS.items()}
+from .players import PLAYERS, NAME_TO_TAG
 
 base_lvl = {
     'common': 1,

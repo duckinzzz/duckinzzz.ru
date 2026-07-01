@@ -51,13 +51,12 @@ jobs:
             SECRET_KEY=${{ secrets.SECRET_KEY }}
             DEBUG=False
             CR_API_TOKEN=${{ secrets.CR_API_TOKEN }}
-
-            DB_NAME=${{ secrets.DB_NAME }}
-            DB_USER=${{ secrets.DB_USER }}
-            DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            DB_HOST=${{ secrets.DB_HOST }}
-            DB_PORT=${{ secrets.DB_PORT }}
+            DATABASE_URL=${{ secrets.DATABASE_URL }}
             BOTSTATS_API_TOKEN=${{ secrets.BOTSTATS_API_TOKEN }}
+            ALLOWED_HOSTS=${{ secrets.ALLOWED_HOSTS }}
+            GUNICORN_WORKERS=${{ secrets.GUNICORN_WORKERS }}
+            CELERY_BROKER_URL=${{ secrets.CELERY_BROKER_URL }}
+            CELERY_RESULT_BACKEND=${{ secrets.CELERY_RESULT_BACKEND }}
             EOF
 
             IMAGE_TAG=${{ github.sha }}

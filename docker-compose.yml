@@ -1,6 +1,24 @@
 x-app-image: &app-image ghcr.io/duckinzzz/duckinzzz.ru:latest
 
 services:
+  migrate:
+    image: *app-image
+    container_name: duckinzzz_migrate
+    env_file:
+      - .env
+    volumes:
+      - static_volume:/app/static
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - duckinzzz_net
+    restart: "no"
+    command: >
+      bash -c "
+      python manage.py migrate --noinput &&
+      python manage.py collectstatic --noinput --clear
+      "
+
   web:
     image: *app-image
     container_name: duckinzzz_web
@@ -16,6 +34,9 @@ services:
     volumes:
       - static_volume:/app/static
       - media_volume:/app/media
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
     expose:
       - "8000"
     entrypoint: [ "/bin/bash", "/app/entrypoint.sh" ]
@@ -33,13 +54,14 @@ services:
     env_file:
       - .env
     depends_on:
-      - redis
-      - web
+      redis:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
       - duckinzzz_net
-    entrypoint: [ ]
     command: celery -A config worker --loglevel=warning --concurrency=1 --max-tasks-per-child=50
     restart: unless-stopped
 
@@ -52,8 +74,10 @@ services:
     env_file:
       - .env
     depends_on:
-      - redis
-      - web
+      redis:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
     networks:
       - duckinzzz_net
     extra_hosts:

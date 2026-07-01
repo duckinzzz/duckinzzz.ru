@@ -5,20 +5,10 @@ from django.utils import timezone
 
 from config import settings
 from .models import BattleLog
+from .players import PLAYERS
 
 API_TOKEN = settings.CR_API_TOKEN
 API_BASE = "https://api.clashroyale.com/v1"
-REQUEST_DELAY = 0.5
-
-PLAYERS = {
-    "#UY2VY9YUG": "grandison",
-    "#Q8899QUY": "(-РашеР-)",
-    "#289U8CQR2": "duckinzzz",
-    "#VG9CR9R2J": "Шапа Шуточкин",
-    "#20QP9JGGRQ": "клечик нямочкин",
-    "#RLJVGUJL": "Lucky",
-    "#22009JPCCQ": "flamboyx",
-}
 
 
 def fetch_level(player_tag: str) -> dict | None:
@@ -92,16 +82,16 @@ def update_database():
                     print(f"  ✗ Failed to fetch level data for {player_name}")
                     continue
 
-                player_tower = player_data.get('expLevel', 1)
-                enemy_tower = enemy_data.get('expLevel', 1)
+                player_exp_lvl = player_data.get('expLevel', 1)
+                enemy_exp_lvl = enemy_data.get('expLevel', 1)
 
                 try:
                     BattleLog.objects.create(
                         battle_time=battle_time,
                         player_tag=battle["team"][0]["tag"],
                         enemy_tag=enemy_tag,
-                        player_exp_lvl=player_tower,
-                        enemy_exp_lvl=enemy_tower,
+                        player_exp_lvl=player_exp_lvl,
+                        enemy_exp_lvl=enemy_exp_lvl,
                         starting_trophies=int(battle["team"][0]["startingTrophies"]),
                         trophy_change=int(battle["team"][0].get("trophyChange", 0)),
                         raw_data=battle,

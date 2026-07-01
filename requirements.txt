@@ -7,12 +7,9 @@ Django==5.2.10
 django-environ==0.12.0
 idna==3.11
 psycopg2-binary==2.9.11
-python-dateutil==2.9.0.post0
 requests==2.32.5
-six==1.17.0
 sqlparse==0.5.5
 tzdata==2025.3
 urllib3==2.6.3
 gunicorn
-whitenoise
 djangorestframework==3.17.1
